@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import javax.print.attribute.standard.SheetCollate;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.WindowConstants;
@@ -52,6 +53,7 @@ public class MainFrame extends JFrame implements Runnable {
 				int i = JOptionPane.showConfirmDialog(null, "종료 하시겠습니까?", "", JOptionPane.YES_NO_OPTION);
 				if (i == 0) {
 					try {
+						sendRequest(new MemberData(MemberData.DISCONNECT, null, null));
 						finalize();
 						System.exit(0);
 					} catch (Throwable e1) {
@@ -76,6 +78,7 @@ public class MainFrame extends JFrame implements Runnable {
 			socket = new Socket("203.233.196.196", 8888);
 			oos = new ObjectOutputStream(socket.getOutputStream());
 			ois = new ObjectInputStream(socket.getInputStream());
+			new Thread(this).start();
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			System.out.println("위");
@@ -133,21 +136,45 @@ public class MainFrame extends JFrame implements Runnable {
 	public void run() { // 서버에서 오는 신호를 읽어 처리함.
 		while (true) {
 			try {
-				Object data = ois.readUnshared();
+				Object data = ois.readObject();
 				if (data instanceof MemberData) {
+					MemberData md = (MemberData) data;
+					System.out.println(md.getState());
+					switch (md.getState()) {
+					case MemberData.LOGIN_SUCCESS:
+						switchingPanel(MAIN);
+						break;
+					case MemberData.PW_MISSMATCH:
+						JOptionPane.showMessageDialog(null, "잘못된 비밀번호 입니다.");
+						logInPanel.clearField();
+						break;
+					case MemberData.ID_NOTFOUND:
+						JOptionPane.showMessageDialog(null, "존재하지 않는 아이디 입니다.");
+						logInPanel.clearField();
+						break;
+					case MemberData.REGISTER_SUCCESS:
+						regisetPanel.clearField();
+						switchingPanel(LOGIN);
+						break;
+					case MemberData.REGISTER_FAIL:
+						JOptionPane.showMessageDialog(null, "이미 사용중인 아이디 입니다.");
+						break;
+					}
+				} else if (data instanceof ScheduleData) {
 
 				}
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
+				break;
 			}
 		}
 	}
 
 	public void sendRequest(MemberData data) {
 		try {
-			oos.writeUnshared(data);
+			oos.writeObject(data);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

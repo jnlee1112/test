@@ -14,7 +14,7 @@ public class LogInPanel extends JPanel implements ActionListener {
 
 	private MainFrame mf;
 	private JTextField tfID;
-	private JTextField tfPassword;
+	private JTextField tfPW;
 	private JButton btnLogIn;
 	private JButton btnRegiser;
 
@@ -41,10 +41,10 @@ public class LogInPanel extends JPanel implements ActionListener {
 		tfID.setColumns(10);
 		add(tfID);
 
-		tfPassword = new JTextField();
-		tfPassword.setBounds(24, 234, 236, 33);
-		tfPassword.setColumns(10);
-		add(tfPassword);
+		tfPW = new JTextField();
+		tfPW.setBounds(24, 234, 236, 33);
+		tfPW.setColumns(10);
+		add(tfPW);
 
 		ImageIcon ii = new ImageIcon("kakaotwitbook.png");
 		JLabel lblLogInTheme = new JLabel(ii);
@@ -55,12 +55,15 @@ public class LogInPanel extends JPanel implements ActionListener {
 
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == btnLogIn) { // 로그인 버튼
-//			mf.sendRequest(new Data());
-			mf.switchingPanel(MainFrame.MAIN);
+			mf.sendRequest(new MemberData(MemberData.FIRST_CONNECT, tfID.getText(), tfPW.getText()));
 		}
 		if (e.getSource() == btnRegiser) { // 회원등록 버튼
 			mf.switchingPanel(MainFrame.REGISERT);
 		}
+	}
+
+	public void clearField() {
+		tfPW.setText("");
 	}
 
 }

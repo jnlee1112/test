@@ -66,14 +66,19 @@ public class RegisetPanel extends JPanel implements ActionListener {
 
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == btnOk) {
-			mf.switchingPanel(MainFrame.LOGIN);
+			mf.sendRequest(new MemberData(MemberData.REGISTER, tfName.getText(), tfID.getText(), tfPW.getText(),
+					tfEmail.getText()));
 		} else if (e.getSource() == btnCancle) {
-			tfEmail.setText("");
-			tfID.setText("");
-			tfName.setText("");
-			tfPW.setText("");
+			clearField();
 			mf.switchingPanel(MainFrame.LOGIN);
 		}
+	}
+
+	public void clearField() {
+		tfEmail.setText("");
+		tfID.setText("");
+		tfName.setText("");
+		tfPW.setText("");
 	}
 
 }

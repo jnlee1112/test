@@ -8,7 +8,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashSet;
 
 public class Server implements Runnable {
 
@@ -40,18 +39,21 @@ public class Server implements Runnable {
 		Connection con = ConnectionManager.getConnectrion();
 		while (isConnect) {
 			try {
-				Object data = (Object) ois.readUnshared();
+				Object data = (Object) ois.readObject();
 				if (data instanceof MemberData) { // MemberData
 					MemberData md = (MemberData) data;
+
 					switch (md.getState()) {
 					case MemberData.FIRST_CONNECT:
+						System.out.println("FIRST_CONNECT");
 						int loginState = 0;
-						String sql = "select * from member1 where ID ='"+md.getID()+"'";
+						String sql = "select * from member1 where ID = ?";
 						try {
 							PreparedStatement ps = con.prepareStatement(sql);
+							ps.setString(1, md.getID());
 							ResultSet rs = ps.executeQuery();
 							if (rs.next()) {
-								if (rs.getString("PW") == md.getPW()) {
+								if (rs.getString("PW").equals(md.getPW())) {
 									loginState = MemberData.LOGIN_SUCCESS;
 									userNo = rs.getInt("MNO");
 									userID = rs.getString("ID");
@@ -66,9 +68,11 @@ public class Server implements Runnable {
 						} catch (SQLException e) {
 							e.printStackTrace();
 						}
+						System.out.println(loginState);
 						sendResponse(new MemberData(loginState, md.getID(), md.getPW()));
 						break;
 					case MemberData.REGISTER:
+						System.out.println("REGISTER");
 						String sqlR = "insert into member1 values(seq_mno.nextval,?,?,?,?)";
 						try {
 							PreparedStatement ps = con.prepareStatement(sqlR);
@@ -85,21 +89,22 @@ public class Server implements Runnable {
 						sendResponse(new MemberData(MemberData.REGISTER_SUCCESS, null, null));
 						break;
 					case MemberData.DISCONNECT:
+						System.out.println("DISCONNECT");
 						ConnectionManager.close(con);
 						ois.close();
 						oos.close();
 						isConnect = false;
 						System.out.println("client out");
 						break;
-					}//switch
+					}// switch
 
-				}else if(data instanceof ScheduleData){
-					ScheduleData sd = (ScheduleData)data;
+				} else if (data instanceof ScheduleData) {
+					ScheduleData sd = (ScheduleData) data;
 					switch (sd.getState()) {
 					case ScheduleData.CREATE_NEW_GROUP:
 						ArrayList<Integer> memberL = new ArrayList<>();
 						memberL = sd.getMemberList();
-						int possibleDates [][] = new int [13][32];
+						int possibleDates[][] = new int[13][32];
 						for (int memberNO : memberL) {
 							try {
 								String sqlPossible = "select to_char(pdate, 'mm'), to_char(pdate,'dd') from possible1 where mno = ? and pdate > sysdate";
@@ -107,25 +112,25 @@ public class Server implements Runnable {
 								ps.setInt(1, memberNO);
 								ResultSet rs = ps.executeQuery();
 								if (rs.next()) {
-									possibleDates[Integer.parseInt(rs.getString(1))][Integer.parseInt(rs.getString(2))]++;
+									possibleDates[Integer.parseInt(rs.getString(1))][Integer
+											.parseInt(rs.getString(2))]++;
 								}
 							} catch (SQLException e) {
 								e.printStackTrace();
 							}
 						}
-						
+
 						String sqlG = "insert into group1 values(seq_grno.nextval,?,,?)";
 						try {
 							PreparedStatement ps = con.prepareStatement(sqlG);
 							ps.setString(1, sd.getGrName());
 							ps.executeUpdate();
-							
+
 						} catch (SQLException e) {
 							e.printStackTrace();
 						}
-						
+
 						break;
-					
 
 					default:
 						break;
@@ -142,7 +147,7 @@ public class Server implements Runnable {
 
 	private void sendResponse(Object data) {
 		try {
-			oos.writeUnshared(data);
+			oos.writeObject(data);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

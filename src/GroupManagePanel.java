@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 
 public class GroupManagePanel extends JPanel implements ActionListener {
 
