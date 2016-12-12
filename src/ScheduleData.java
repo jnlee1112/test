@@ -9,6 +9,8 @@ public class ScheduleData implements Serializable {
 	public static final int ADD_POSSIBLE_DATE = 4;
 	public static final int GROUP_MANAGE = 5;
 	public static final int CREATE_NEW_GROUP = 6;
+	public static final int CREATE_FAIL = 7;
+	
 
 	private int state;
 	private String grName;

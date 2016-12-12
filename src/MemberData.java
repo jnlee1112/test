@@ -5,13 +5,16 @@ public class MemberData implements Serializable {
 	public static final int FIRST_CONNECT = 0;
 	public static final int LOGIN_SUCCESS = 1;
 	public static final int ID_NOTFOUND = 2;
-	public static final int PW_MISSMATCH = 3;
-	public static final int REGISTER = 4;
-	public static final int REGISTER_SUCCESS = 5;
-	public static final int REGISTER_FAIL = 6;
-	public static final int DISCONNECT = 7;
+	public static final int ID_FOUND = 3;
+	public static final int PW_MISSMATCH = 4;
+	public static final int REGISTER = 5;
+	public static final int REGISTER_SUCCESS = 6;
+	public static final int REGISTER_FAIL = 7;
+	public static final int DISCONNECT = 8;
+	public static final int FIND_ID = 9;
 
 	private int state;
+	private int memberNo;
 	private String name;
 	private String ID;
 	private String PW;
@@ -29,6 +32,20 @@ public class MemberData implements Serializable {
 		this.ID = ID;
 		this.PW = PW;
 		this.email = email;
+	}
+	
+	public MemberData(int state, int memberNo) {
+		this.state = state;
+		this.memberNo = memberNo;
+	}
+	
+	
+	public int getMemberNo() {
+		return memberNo;
+	}
+
+	public void setMemberNo(int memberNo) {
+		this.memberNo = memberNo;
 	}
 
 	public int getState() {
