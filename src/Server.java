@@ -8,6 +8,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
 public class Server implements Runnable {
 
@@ -88,6 +90,23 @@ public class Server implements Runnable {
 						}
 						sendResponse(new MemberData(MemberData.REGISTER_SUCCESS, null, null));
 						break;
+					case MemberData.FIND_ID:
+						String sqlF = "select mno from member1 where mno = ?";
+						try {
+							PreparedStatement ps = con.prepareStatement(sqlF);
+							ps.setInt(1, md.getMemberNo());
+							ResultSet rs = ps.executeQuery();
+							if (rs.next()) {
+								sendResponse(new MemberData(MemberData.ID_FOUND, rs.getInt("mno")));
+							}else{
+								sendResponse(new MemberData(MemberData.ID_NOTFOUND, -1));
+							}
+							rs.close();
+							ps.close();
+						} catch (SQLException e) {
+							e.printStackTrace();
+						}
+						break;
 					case MemberData.DISCONNECT:
 						System.out.println("DISCONNECT");
 						ConnectionManager.close(con);
@@ -101,40 +120,70 @@ public class Server implements Runnable {
 				} else if (data instanceof ScheduleData) {
 					ScheduleData sd = (ScheduleData) data;
 					switch (sd.getState()) {
-					case ScheduleData.CREATE_NEW_GROUP:
+					case ScheduleData.CREATE_NEW_GROUP: //1명 이하면 나가리. 2<= <전체: 최적의 날짜와 참여멤버. 75% 찬성해야 약속 성사.
 						ArrayList<Integer> memberL = new ArrayList<>();
 						memberL = sd.getMemberList();
+						ArrayList<Integer> possibleMember = new ArrayList<>();
 						int possibleDates[][] = new int[13][32];
 						for (int memberNO : memberL) {
 							try {
 								String sqlPossible = "select to_char(pdate, 'mm'), to_char(pdate,'dd') from possible1 where mno = ? and pdate > sysdate";
 								PreparedStatement ps = con.prepareStatement(sqlPossible);
 								ps.setInt(1, memberNO);
-								ResultSet rs = ps.executeQuery();
-								if (rs.next()) {
+								ResultSet rs = ps.executeQuery(); //가능한 날짜의 모음
+								while (rs.next()) {
 									possibleDates[Integer.parseInt(rs.getString(1))][Integer
 											.parseInt(rs.getString(2))]++;
 								}
+								rs.close();
+								ps.close();
 							} catch (SQLException e) {
 								e.printStackTrace();
 							}
 						}
-
-						String sqlG = "insert into group1 values(seq_grno.nextval,?,,?)";
-						try {
-							PreparedStatement ps = con.prepareStatement(sqlG);
-							ps.setString(1, sd.getGrName());
-							ps.executeUpdate();
-
-						} catch (SQLException e) {
-							e.printStackTrace();
+						
+						int optimum = 0; //possibleDates 중 가장 큰 수 저장
+						int optimumMonth = 0;
+						int optimumDate = 0;
+						Calendar today = Calendar.getInstance();
+						int month = today.get(Calendar.MONTH)+1;
+						int date = today.get(Calendar.DATE);
+						for (int i = month; i < month+2; i++) {
+							for (int j = date; j < 32; j++) {
+								if(possibleDates[i][j] > optimum){
+									optimum = possibleDates[i][j];
+									optimumMonth = i;
+									optimumDate = j;
+								}
+							}
 						}
+							
+						if (optimum < 2) { //가능한 날이 아무도 안 겹칠때 fail
+							sendResponse(new ScheduleData(ScheduleData.CREATE_FAIL, null, null, null));
+						}else{
+							Calendar cal = Calendar.getInstance();
+							cal.set(Calendar.MONTH, optimumMonth-1);
+							cal.set(Calendar.DATE, optimumDate);
+							long d = cal.getTimeInMillis();
+							java.sql.Date optimumD = new java.sql.Date(d);
 
+							String sqlG = "insert into group1 (grno,grname,gdate) values(seq_grno.nextval,?,?)";
+							try {
+								PreparedStatement ps = con.prepareStatement(sqlG);
+								ps.setString(1, sd.getGrName());
+								ps.setDate(2, optimumD);
+								ps.executeUpdate();
+								ps.close();
+							} catch (SQLException e) {
+								e.printStackTrace();
+							}
+						}
 						break;
 
 					default:
 						break;
 					}
+					
 				}
 
 			} catch (ClassNotFoundException e) {

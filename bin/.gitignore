@@ -1,18 +1,20 @@
 /ConnectionManager.class
 /CreateNewGroupPanel.class
-/Data.class
-/DatePickerExample.class
 /GroupManagePanel$MessagePanel.class
 /GroupManagePanel.class
+/JDBCpro$MouseClick.class
+/JDBCpro.class
 /LogInPanel.class
 /MainFrame$1.class
 /MainFrame.class
 /MainPanel.class
 /MemberData.class
 /MySchedulePanel.class
+/PersnalSchedulePanel.class
 /RegisetPanel.class
 /ScheduleData.class
 /Server.class
+<<<<<<< HEAD
 /PersnalSchedulePanel.class
 /JDBCpro.class
 /JDBCpro$MouseClick.class
@@ -20,3 +22,5 @@
 /MyCalendar.class
 /Calendar$MouseClick.class
 /Calendar.class
+=======
+>>>>>>> 05cbd1c195d4eb0a2934d42b119a659040c35ec5
