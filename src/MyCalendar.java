@@ -1,20 +1,35 @@
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
-import java.sql.*;
-import java.io.*;
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
-class JDBCpro extends JFrame implements ActionListener, MouseListener {
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+
+class MyCalendar extends JPanel implements ActionListener {
 
 	class MouseClick extends MouseAdapter {
 		@Override
 		public void mouseClicked(MouseEvent e) {
 			if (e.getClickCount() >= 2) {
-
+				JFrame f = new JFrame(year + "년" + month + "월" + day + "일");
+				PersnalSchedulePanel psp = new PersnalSchedulePanel();
+				f.setSize(psp.getWidth(), psp.getHeight()+30);
+				f.add(psp);
+				f.setLocationRelativeTo(null);
+				f.setVisible(true);
 			}
-
 		}
 	}
 
@@ -25,10 +40,8 @@ class JDBCpro extends JFrame implements ActionListener, MouseListener {
 	Calendar cal;
 	JButton btnBefore2, btnAfter2; // befor2 작년 // after2 내년
 	JButton btnBefore, btnAfter;
-	JButton btnAdd, btnDel, btnUpdate;
 	JButton[] calBtn = new JButton[49];
 	JLabel time;
-	JPanel panSouth;
 	JPanel panNorth;
 	JPanel panCenter;
 	JTextField txtMonth, txtYear;
@@ -36,14 +49,11 @@ class JDBCpro extends JFrame implements ActionListener, MouseListener {
 	JTextArea txtWrite;
 	BorderLayout bLayout = new BorderLayout();
 
-	public JDBCpro() {
+	public MyCalendar() {
 
 		today = Calendar.getInstance(); // 디폴트의 타임 존 및 로케일을 사용해 달력을 가져옵니다.
 		cal = new GregorianCalendar();
-		/*
-		 * GregorianCalendar 는,Calendar 의 구상 서브 클래스이며, 세계의 대부분의 지역에서 사용되는 표준적인
-		 * 달력 시스템을 제공합니다.
-		 */
+
 		year = today.get(Calendar.YEAR);
 		month = today.get(Calendar.MONTH) + 1;// 1월의 값이 0
 
@@ -66,47 +76,19 @@ class JDBCpro extends JFrame implements ActionListener, MouseListener {
 
 		add(panNorth, "North");
 
-		/*
-		 * jdbcpro라는 큰놈 위에 레이아웃을 동,서,남,북으로 나눠서 패널을 하나 하나 올려 놓는 형식이다. 메인보드 위에 부품이
-		 * 하나 하나 조립되듯.....
-		 */
-
-		// 이놈은 달력에 날에 해당하는 부분
-
 		panCenter = new JPanel(new GridLayout(7, 7));// 격자나,눈금형태의 배치관리자
 		f = new Font("Sherif", Font.BOLD, 12);
+
+		btnAfter.addActionListener(this);
+		btnAfter2.addActionListener(this);
+		btnBefore.addActionListener(this);
+		btnBefore2.addActionListener(this);
 
 		gridInit();
 		calSet();
 		hideInit();
 		add(panCenter, "Center");
 
-		//////////////////////////////////
-		panSouth = new JPanel();
-		// panS_West = new JPanel();
-		// panSouth.add(panS_West);
-		// panSouth.add(panS_East);
-
-		panSouth.add(btnAdd = new JButton("메모추가"));
-		panSouth.add(btnDel = new JButton("메모삭제"));
-		panSouth.add(btnUpdate = new JButton("메모수정"));
-		panSouth.add(txtWrite = new JTextArea());
-
-		txtWrite.setPreferredSize(new Dimension(150, 28));
-		// 메모를 입력받을 텍스트 박스를 가로 150 세로 28 생성
-		add(panSouth, "South");
-
-		// 버튼에 대한 행동들을 정의한다.
-		btnBefore.addActionListener(this);
-		btnAfter.addActionListener(this);
-		btnBefore2.addActionListener(this);
-		btnAfter2.addActionListener(this);
-		btnAdd.addActionListener(this); // 메모추가
-		btnDel.addActionListener(this); // 메모삭제
-		btnUpdate.addActionListener(this); // 메모삭제
-
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // 닫는기능
-		setTitle("7조 프로젝트 스케쥴러");
 		setBounds(200, 200, 450, 400); // (x,y,가로,세로) 프레임창의 위치
 		setVisible(true);
 
@@ -205,19 +187,7 @@ class JDBCpro extends JFrame implements ActionListener, MouseListener {
 			hideInit();
 			this.txtYear.setText(year + "년");
 			this.txtMonth.setText(month + "월");
-		} else if (cook.getSource() == btnAdd) {
-			calSet();
-			txtWrite.setText("");
-
-		} else if (cook.getSource() == btnDel) {
-			calSet();
-			txtWrite.setText("");
-		} else if (cook.getSource() == btnUpdate) {
-			calSet();
-			txtWrite.setText("");
-		}
-
-		else if (Integer.parseInt(cook.getActionCommand()) >= 1 && Integer.parseInt(cook.getActionCommand()) <= 31) {
+		} else if (Integer.parseInt(cook.getActionCommand()) >= 1 && Integer.parseInt(cook.getActionCommand()) <= 31) {
 			day = Integer.parseInt(cook.getActionCommand());
 			// 버튼의 밸류 즉 1,2,3.... 문자를 정수형으로 변환하여 클릭한 날짜를 바꿔준다.
 			System.out.println(day);
@@ -241,7 +211,8 @@ class JDBCpro extends JFrame implements ActionListener, MouseListener {
 
 		for (int i = days.length; i < 49; i++) {
 			panCenter.add(calBtn[i] = new JButton(""));
-			calBtn[i].addMouseListener(this);
+			calBtn[i].addMouseListener(new MouseClick());
+			calBtn[i].addActionListener(this);
 		}
 	}// end gridInit()
 
@@ -269,40 +240,4 @@ class JDBCpro extends JFrame implements ActionListener, MouseListener {
 
 	}// end calInput()
 
-	public static void main(String[] args) {
-		JDBCpro jdbc = new JDBCpro();
-
-	}
-
-	@Override
-	public void mouseClicked(MouseEvent e) {
-		// TODO Auto-generated method stub
-		if (e.getClickCount() >= 2) {
-			System.out.println("double clicked");
-		}
-	}
-
-	@Override
-	public void mouseEntered(MouseEvent e) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void mouseExited(MouseEvent e) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void mousePressed(MouseEvent e) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void mouseReleased(MouseEvent e) {
-		// TODO Auto-generated method stub
-
-	}
 }

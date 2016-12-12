@@ -8,8 +8,8 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 public class MainPanel extends JPanel implements ActionListener {
-	private int width = 600;
-	private int height = 700;
+	private int width = 400;
+	private int height = 400;
 
 	private MainFrame mf;
 	private JButton groupManageBtn;
@@ -20,10 +20,10 @@ public class MainPanel extends JPanel implements ActionListener {
 		setSize(width, height);
 		setLayout(new BorderLayout());
 
-		JPanel centerPanel = new JPanel();
+		MyCalendar centerPanel = new MyCalendar();
 		centerPanel.setPreferredSize(new Dimension(700, 650));
 		JPanel southPanel = new JPanel();
-		southPanel.setPreferredSize(new Dimension(600, 100));
+		southPanel.setPreferredSize(new Dimension(600, 70));
 		southPanel.setBackground(Color.DARK_GRAY);
 
 		myScheduleBtn = new JButton("내 일정 설정");
