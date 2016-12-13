@@ -65,19 +65,15 @@ public class PersnalSchedulePanel extends JPanel implements ActionListener {
 		if (e.getSource() == btnOK) {
 			if (tfTitle.getText().trim().isEmpty()) {
 				JOptionPane.showMessageDialog(null, "제목이 비었습니다.");
-				System.out.println("1");
 			} else if (tfPlace.getText().trim().isEmpty()) {
 				JOptionPane.showMessageDialog(null, "장소가 비었습니다.");
-				System.out.println("2");
 			} else if (isAdd) {
 				MainFrame.getInstance().sendRequest(new ScheduleData(ScheduleData.PERSNAL_SCHEDULE_ADD,
 						tfTitle.getText(), tfPlace.getText(), date));
-				System.out.println("3");
 				frame.dispose();
 			} else {
 				MainFrame.getInstance().sendRequest(new ScheduleData(ScheduleData.PERSNAL_SCHEDULE_UPDATE,
 						tfTitle.getText(), tfPlace.getText(), date));
-				System.out.println("4");
 				frame.dispose();
 			}
 		}
@@ -86,6 +82,8 @@ public class PersnalSchedulePanel extends JPanel implements ActionListener {
 				MainFrame.getInstance()
 						.sendRequest(new ScheduleData(ScheduleData.PERSNAL_SCHEDULE_DELETE, null, null, date));
 				frame.dispose();
+				MainFrame.getInstance().updateCalendar();
+				MainFrame.getInstance().getInitialData();
 			}
 		}
 	}

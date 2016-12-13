@@ -43,7 +43,6 @@ public class Server implements Runnable {
 				Object data = (Object) ois.readObject();
 				if (data instanceof MemberData) { // MemberData
 					MemberData md = (MemberData) data;
-
 					switch (md.getState()) {
 					case MemberData.FIRST_CONNECT:
 						System.out.println("FIRST_CONNECT");
@@ -69,7 +68,6 @@ public class Server implements Runnable {
 						} catch (SQLException e) {
 							e.printStackTrace();
 						}
-						System.out.println(loginState);
 						sendResponse(new MemberData(loginState, md.getID(), md.getPW()));
 						break;
 					case MemberData.REGISTER:
@@ -90,14 +88,13 @@ public class Server implements Runnable {
 						sendResponse(new MemberData(MemberData.REGISTER_SUCCESS, null, null));
 						break;
 					case MemberData.FIND_ID:
-						String sqlF = "select mno from member1 where mno = ?";
+						String sqlF = "select mno, id from member1 where id = ?";
 						try {
 							PreparedStatement ps = con.prepareStatement(sqlF);
-							ps.setInt(1, md.getMemberNo());
+							ps.setString(1, md.getID());
 							ResultSet rs = ps.executeQuery();
 							if (rs.next()) {
-								sendResponse(
-										new MemberData(MemberData.ID_FOUND, rs.getInt("mno"), rs.getString("mname")));
+								sendResponse(new MemberData(MemberData.ID_FOUND, rs.getInt("mno"), rs.getString("id")));
 							} else {
 								sendResponse(new MemberData(MemberData.ID_NOTFOUND, -1, null));
 							}
@@ -125,7 +122,7 @@ public class Server implements Runnable {
 														// 찬성해야 약속 성사.
 						ArrayList<Integer> memberL = new ArrayList<>();
 						ArrayList<Integer> possibleMember = new ArrayList<>();
-						int possibleDates[][] = new int[13][32]; // 각 개인이 가능한
+						int possibleDates[][] = new int[15][32]; // 각 개인이 가능한
 						memberL = sd.getMemberNoList();// 날짜의 집합
 						for (int memberNO : memberL) {
 							try {
@@ -222,7 +219,7 @@ public class Server implements Runnable {
 						}
 						break;
 					case ScheduleData.PERSNAL_SCHEDULE_DELETE:
-						String sqlDelete = "delte schedule1 where mno = ? and sdate = ?";
+						String sqlDelete = "delete schedule1 where mno = ? and sdate = ?";
 						try {
 							PreparedStatement ps = con.prepareStatement(sqlDelete);
 							ps.setInt(1, userNo);
@@ -240,6 +237,8 @@ public class Server implements Runnable {
 							ps.setInt(1, userNo);
 							ResultSet rs = ps.executeQuery();
 							while (rs.next()) {
+								System.out.println(rs.getString(1) + "<-sdate" + rs.getString(2) + "<-title"
+										+ rs.getString(3) + "<-splace");
 								sendResponse(new ScheduleData(ScheduleData.GET_PERSONAL_SCHEDULE, rs.getString("title"),
 										rs.getString("splace"), rs.getDate("sdate")));
 							}

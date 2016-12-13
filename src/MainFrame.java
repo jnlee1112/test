@@ -144,7 +144,6 @@ public class MainFrame extends JFrame implements Runnable {
 				Object data = ois.readObject();
 				if (data instanceof MemberData) {
 					MemberData md = (MemberData) data;
-					System.out.println(md.getState());
 					switch (md.getState()) {
 					case MemberData.LOGIN_SUCCESS:
 						getInitialData();
@@ -175,7 +174,6 @@ public class MainFrame extends JFrame implements Runnable {
 					case ScheduleData.GET_PERSONAL_SCHEDULE:
 						System.out.println(sd.getDate());
 						mainPane.addPersnalSchedule(sd);
-						System.out.println(sd.getState());
 						break;
 					case ScheduleData.CREATE_FAIL:
 						JOptionPane.showMessageDialog(null, "출석률이 75% 이하여서 그룹 등록 실패");
@@ -206,4 +204,9 @@ public class MainFrame extends JFrame implements Runnable {
 			e.printStackTrace();
 		}
 	}
+
+	public void updateCalendar() {
+		mainPane.updateCalendar();
+	}
+
 }

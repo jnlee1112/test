@@ -1,41 +1,110 @@
 import java.awt.Color;
+import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
-class PersonalCalendar extends MyCalendar implements ActionListener {
+class PersonalCalendar extends JPanel implements ActionListener {
 
-	private HashSet<ScheduleData> personalScheduleSet;
-	private HashSet<ScheduleData> groupScheduleSet;
+	private ArrayList<ScheduleData> personalScheduleSet;
+	private ArrayList<ScheduleData> groupScheduleSet;
+
+	private String[] days = { "일", "월", "화", "수", "목", "금", "토" };
+	private int year, month, day, todays;
+	private Font f;
+	private Calendar today;
+	private Calendar cal;
+	private JButton btnLastYear, btnNextYear;
+	private JButton btnLastMonth, btnNextMonth;
+	private JButton[] calBtn = new JButton[49];
+	private JPanel panNorth;
+	private JPanel panCenter;
+	private JTextField txtMonth, txtYear;
 
 	public PersonalCalendar() {
-		// 버튼에 리스너 달기 해야함
+		today = Calendar.getInstance();
+		cal = new GregorianCalendar();
+		year = today.get(Calendar.YEAR);
+		month = today.get(Calendar.MONTH) + 1;
+
+		panNorth = new JPanel();
+		panNorth.add(btnLastYear = new JButton(" ↓ "));
+		panNorth.add(btnLastMonth = new JButton(" ← "));
+
+		panNorth.add(txtYear = new JTextField(year + "년"));
+		panNorth.add(txtMonth = new JTextField(month + "월"));
+
+		f = new Font("Sherif", Font.BOLD, 18);
+		txtYear.setFont(f);
+		txtMonth.setFont(f);
+
+		txtYear.setEnabled(false);
+		txtMonth.setEnabled(false);
+
+		panNorth.add(btnNextMonth = new JButton(" → "));
+		panNorth.add(btnNextYear = new JButton(" ↑ "));
+
+		add(panNorth, "North");
+
+		panCenter = new JPanel(new GridLayout(7, 7));
+		f = new Font("Sherif", Font.BOLD, 12);
+
+		gridInit();
+		calSet();
+		hideInit();
+		add(panCenter, "Center");
+		setButton();
+
 		btnLastMonth.addActionListener(this);
 		btnLastYear.addActionListener(this);
 		btnNextMonth.addActionListener(this);
 		btnNextYear.addActionListener(this);
-		setButton();
 	}
 
-	private void setButton() {
-		for (JButton jButton : calBtn) {
-			jButton.addMouseListener(new MouseClick());
+	public void setButton() {
+		for (int i = 7; i < calBtn.length; i++) {
+			calBtn[i].addMouseListener(new MouseClick());
+			calBtn[i].addActionListener(this);
 		}
+		calSetColor();
 	}
 
 	class MouseClick extends MouseAdapter {
 		@Override
 		public void mouseClicked(MouseEvent e) {
 			if (e.getClickCount() >= 2) {
+				Calendar c = Calendar.getInstance();
+				c.set(Calendar.YEAR, year);
+				c.set(Calendar.MONTH, (month - 1));
+				c.set(Calendar.DATE, day);
+				Date d = new Date(c.getTimeInMillis());
+				boolean isAdd = true;
+				for (ScheduleData sd : groupScheduleSet) {
+					if (sd.getDate().toString().equals(d.toString())) {
+						JOptionPane.showMessageDialog(null, "넌 못지나간다.");
+					}
+				}
+				for (ScheduleData sd : personalScheduleSet) {
+					if (sd.getDate().toString().equals(d.toString()))
+						isAdd = false;
+				}
+				System.out.println(d);
+				System.out.println(isAdd);
 				JFrame f = new JFrame(year + "년" + month + "월" + day + "일");
-				PersnalSchedulePanel psp = new PersnalSchedulePanel(true, cal, f);
+				PersnalSchedulePanel psp = new PersnalSchedulePanel(isAdd, c, f);
 				f.setSize(psp.getWidth(), psp.getHeight() + 30);
 				f.add(psp);
 				f.setLocationRelativeTo(null);
@@ -62,13 +131,37 @@ class PersonalCalendar extends MyCalendar implements ActionListener {
 	public void addPersnalSchedule(ScheduleData sd) {
 		personalScheduleSet.add(sd);
 		repaintCalendar(0);
-		setButton();
 	}
 
 	public void addGroupSchedule(ScheduleData sd) {
 		groupScheduleSet.add(sd);
 		repaintCalendar(0);
-		setButton();
+	}
+
+	public void calSetColor() { // 일정 색칠하기
+		Calendar c = (Calendar) cal.clone();
+		c.set(Calendar.YEAR, year);
+		c.set(Calendar.MONTH, (month - 1));
+		int count = 1;
+		for (int i = 7; i < calBtn.length; i++) {
+			if ((calBtn[i].getText()).equals(""))
+				continue;
+			c.set(Calendar.DATE, count);
+			Date d = new Date(c.getTimeInMillis());
+			if (personalScheduleSet == null)
+				personalScheduleSet = new ArrayList();
+			if (groupScheduleSet == null)
+				groupScheduleSet = new ArrayList<>();
+			for (ScheduleData sd : personalScheduleSet) {
+				if (sd.getDate().toString().equals(d.toString()))
+					calBtn[i].setBackground(new Color(255, 255, 128));// 노랑
+			}
+			for (ScheduleData sd : groupScheduleSet) {
+				if (sd.getDate().toString().equals(d.toString()))
+					calBtn[i].setBackground(new Color(128, 255, 128));// 연두
+			}
+			count++;
+		}
 	}
 
 	public void calSet() {
@@ -104,19 +197,59 @@ class PersonalCalendar extends MyCalendar implements ActionListener {
 				calBtn[i + 6 + hopping].setForeground(new Color(0, 0, 255));
 			}
 			calBtn[i + 6 + hopping].setText((i) + "");
-			Date date = new Date(cal.getTimeInMillis());
-			if (personalScheduleSet == null)
-				personalScheduleSet = new HashSet<>();
-			if (groupScheduleSet == null)
-				groupScheduleSet = new HashSet<>();
-			for (ScheduleData sd : personalScheduleSet) {
-				if (sd.getDate().equals(date))
-					calBtn[i + 6 + hopping].setBackground(new Color(255, 255, 128));
-			}
-			for (ScheduleData sd : groupScheduleSet) {
-				if (sd.getDate().equals(date))
-					calBtn[i + 6 + hopping].setBackground(new Color(128, 255, 0));
-			}
 		}
+	}
+
+	public void repaintCalendar(int i) {
+		this.panCenter.removeAll();
+		calInput(i);
+		gridInit();
+		calSet();
+		hideInit();
+		setButton();
+		this.txtYear.setText(year + "년");
+		this.txtMonth.setText(month + "월");
+	}
+
+	public void hideInit() { // 사용하지 않는 버튼 지우기
+		for (int i = 0; i < calBtn.length; i++) {
+			if ((calBtn[i].getText()).equals(""))
+				calBtn[i].setEnabled(false);
+		}
+	}
+
+	public void gridInit() { // 달력 초기화 및 재 생성
+		GridLayout gridLayout1 = new GridLayout(7, 7);
+		panCenter.setLayout(gridLayout1);
+
+		for (int i = 0; i < days.length; i++)
+			panCenter.add(calBtn[i] = new JButton(days[i]));
+
+		for (int i = days.length; i < 49; i++) {
+			panCenter.add(calBtn[i] = new JButton(""));
+		}
+	}
+
+	public void calInput(int gap) {
+		if (gap == -1 || gap == 1) {
+			month += (gap);
+			if (month <= 0) {
+				month = 12;
+				year = year - 1;
+			} else if (month >= 13) {
+				month = 1;
+				year = year + 1;
+			}
+		} else if (gap == 12) {
+			year++;
+		} else if (gap == -12) {
+			year--;
+		}
+	}
+
+	public void updateCalendar() {
+		groupScheduleSet = new ArrayList<>();
+		personalScheduleSet = new ArrayList<>();
+		repaintCalendar(0);
 	}
 }
