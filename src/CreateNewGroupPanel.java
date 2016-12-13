@@ -22,11 +22,7 @@ public class CreateNewGroupPanel extends JPanel implements ActionListener {
 	private JButton addBtn, deleteBtn, createGroupBtn, cancelBtn;
 	private JList addedList;
 	private ArrayList<String> idList = new ArrayList<>();
-<<<<<<< HEAD
-=======
 	private ArrayList<Integer> mnoList = new ArrayList<>();
-	private MainFrame mf;
->>>>>>> 5ab1e81e6d754febb4c11ddb8998ab01bbc905ed
 
 	public CreateNewGroupPanel() {
 		setSize(width, height);
@@ -100,7 +96,7 @@ public class CreateNewGroupPanel extends JPanel implements ActionListener {
 					return;
 				}
 			}
-			mf.sendRequest(new MemberData(MemberData.FIND_ID, memberID, null));
+			MainFrame.getInstance().sendRequest(new MemberData(MemberData.FIND_ID, memberID, null));
 			memberIDtf.setText("");
 		} else if (arg0.getSource() == deleteBtn) {// 멤버 삭제
 			int index = addedList.getSelectedIndex();
@@ -111,7 +107,8 @@ public class CreateNewGroupPanel extends JPanel implements ActionListener {
 			// 등록 진행
 			groupN = groupNtf.getText();
 			place = placetf.getText();
-			mf.sendRequest(new ScheduleData(ScheduleData.CREATE_NEW_GROUP, groupN, place, mnoList));
+			MainFrame.getInstance()
+					.sendRequest(new ScheduleData(ScheduleData.CREATE_NEW_GROUP, groupN, place, mnoList));
 
 			// 초기화
 			memberIDtf.setText("");
@@ -131,8 +128,8 @@ public class CreateNewGroupPanel extends JPanel implements ActionListener {
 			MainFrame.getInstance().switchingPanel(MainFrame.GROUPMANAGE);
 		}
 	}
-	
-	public void addToList(String memberID, int mno){
+
+	public void addToList(String memberID, int mno) {
 		idList.add(memberID);
 		mnoList.add(mno);
 		addedList.setListData(idList.toArray());
