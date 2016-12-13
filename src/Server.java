@@ -35,7 +35,7 @@ public class Server implements Runnable {
 	}
 
 	public void run() {
-		int userNo;
+		int userNo = 0; //login시 저장되는 userno
 		String userID;
 		boolean isConnect = true;
 		Connection con = ConnectionManager.getConnectrion();
@@ -97,9 +97,9 @@ public class Server implements Runnable {
 							ps.setInt(1, md.getMemberNo());
 							ResultSet rs = ps.executeQuery();
 							if (rs.next()) {
-								sendResponse(new MemberData(MemberData.ID_FOUND, rs.getInt("mno")));
+								sendResponse(new MemberData(MemberData.ID_FOUND, rs.getInt("mno"),rs.getString("mname")));
 							}else{
-								sendResponse(new MemberData(MemberData.ID_NOTFOUND, -1));
+								sendResponse(new MemberData(MemberData.ID_NOTFOUND, -1,null));
 							}
 							rs.close();
 							ps.close();
@@ -117,14 +117,14 @@ public class Server implements Runnable {
 						break;
 					}// switch
 
-				} else if (data instanceof ScheduleData) {
+				} else if (data instanceof ScheduleData) { //ScheduleData
 					ScheduleData sd = (ScheduleData) data;
 					switch (sd.getState()) {
 					case ScheduleData.CREATE_NEW_GROUP: //1명 이하면 나가리. 2<= <전체: 최적의 날짜와 참여멤버. 75% 찬성해야 약속 성사.
 						ArrayList<Integer> memberL = new ArrayList<>();
-						memberL = sd.getMemberList();
-						ArrayList<Integer> possibleMember = new ArrayList<>();
-						int possibleDates[][] = new int[13][32];
+						memberL = sd.getMemberNoList();
+						
+						int possibleDates[][] = new int[13][32]; //각 개인이 가능한 날짜의 집합
 						for (int memberNO : memberL) {
 							try {
 								String sqlPossible = "select to_char(pdate, 'mm'), to_char(pdate,'dd') from possible1 where mno = ? and pdate > sysdate";
@@ -143,8 +143,8 @@ public class Server implements Runnable {
 						}
 						
 						int optimum = 0; //possibleDates 중 가장 큰 수 저장
-						int optimumMonth = 0;
-						int optimumDate = 0;
+						int optimumMonth = 0; //적합한 날의 월
+						int optimumDate = 0; //적합한 날의 일
 						Calendar today = Calendar.getInstance();
 						int month = today.get(Calendar.MONTH)+1;
 						int date = today.get(Calendar.DATE);
@@ -159,14 +159,14 @@ public class Server implements Runnable {
 						}
 							
 						if (optimum < 2) { //가능한 날이 아무도 안 겹칠때 fail
-							sendResponse(new ScheduleData(ScheduleData.CREATE_FAIL, null, null, null));
+							sendResponse(new ScheduleData(ScheduleData.CREATE_FAIL, null, null));
 						}else{
 							Calendar cal = Calendar.getInstance();
 							cal.set(Calendar.MONTH, optimumMonth-1);
 							cal.set(Calendar.DATE, optimumDate);
 							long d = cal.getTimeInMillis();
 							java.sql.Date optimumD = new java.sql.Date(d);
-
+							
 							String sqlG = "insert into group1 (grno,grname,gdate) values(seq_grno.nextval,?,?)";
 							try {
 								PreparedStatement ps = con.prepareStatement(sqlG);
@@ -177,10 +177,148 @@ public class Server implements Runnable {
 							} catch (SQLException e) {
 								e.printStackTrace();
 							}
+							for (int m : memberL) {
+								String sqlM = "insert into meeting (grno, mno) values(seq_grno.currval,?)";
+								try {
+									PreparedStatement ps = con.prepareStatement(sqlM);
+									ps.setInt(1, m);
+									ps.executeUpdate();
+									ps.close();
+								} catch (SQLException e) {
+									e.printStackTrace();
+								}
+							}
+							sendResponse(new ScheduleData(ScheduleData.CREATE_NEW_GROUP, null, null));
 						}
 						break;
-
-					default:
+					case ScheduleData.PERSNAL_SCHEDULE_ADD:
+						String sqlAdd = "insert into schedule1 values(?,?,?,?)";
+						try {
+							PreparedStatement ps = con.prepareStatement(sqlAdd);
+							ps.setInt(1, userNo);
+							ps.setString(2, sd.getTitle());
+							ps.setString(3, sd.getPlace());
+							ps.setDate(4, sd.getDate());
+							ps.executeUpdate();
+							ps.close();
+						} catch (SQLException e) {
+							e.printStackTrace();
+						}
+						break;
+					case ScheduleData.PERSNAL_SCHEDULE_UPDATE:
+						String sqlUpdate = "update schedule1 set title = ?, splace = ? where mno = ? and sdate = ?";
+						try {
+							PreparedStatement ps = con.prepareStatement(sqlUpdate);
+							ps.setString(1, sd.getTitle());
+							ps.setString(2, sd.getPlace());
+							ps.setInt(3, userNo);
+							ps.setDate(4, sd.getDate());
+							ps.executeUpdate();
+							ps.close();
+						} catch (SQLException e) {
+							e.printStackTrace();
+						}
+						break;
+					case ScheduleData.PERSNAL_SCHEDULE_DELETE:
+						String sqlDelete = "delete schedule1 where mno = ? and sdate = ?";
+						try {
+							PreparedStatement ps = con.prepareStatement(sqlDelete);
+							ps.setInt(1, userNo);
+							ps.setDate(2, sd.getDate());
+							ps.executeUpdate();
+							ps.close();
+						} catch (SQLException e) {
+							e.printStackTrace();
+						}
+						break;
+					case ScheduleData.GET_PERSONAL_SCHEDULE:
+						String sqlPS = "select sdate,title,splace from schedule1 where mno = ?";
+						try {
+							PreparedStatement ps = con.prepareStatement(sqlPS);
+							ps.setInt(1, userNo);
+							ResultSet rs = ps.executeQuery();
+							while(rs.next()){
+								sendResponse(new ScheduleData(ScheduleData.GET_PERSONAL_SCHEDULE, rs.getString("title"), rs.getString("splace"), rs.getDate("sdate")));
+							}
+							rs.close();
+							ps.close();
+						} catch (SQLException e) {
+							e.printStackTrace();
+						}
+						break;
+					case ScheduleData.GET_GROUP_SCHEDULE:
+						double count = 0; //agree count
+						double percent = 0; 
+						String sqlGS = "select * from meeting where mno = ?";
+						try {
+							PreparedStatement ps = con.prepareStatement(sqlGS);
+							ps.setInt(1, userNo);
+							ResultSet rs = ps.executeQuery();
+							while(rs.next()){
+								int gNo = rs.getInt("grno");
+								String sql1 = "select * from meeting where grno = ?";
+								PreparedStatement ps1 = con.prepareStatement(sql1);
+								ps1.setInt(1, gNo);
+								ResultSet rs1 = ps1.executeQuery();
+								while(rs1.next()){
+									percent++;
+									if (rs1.getString("agree").equals("YES")) {
+										count++;
+									}
+								}
+								rs1.close();
+								ps1.close();
+								if ((count/percent) >= 0.75) {
+									String sql2 = "select * from group1 where grno = ?";
+									PreparedStatement ps2 = con.prepareStatement(sql2);
+									ResultSet rs2 = ps2.executeQuery();
+									while(rs2.next()){
+										sendResponse(new ScheduleData(ScheduleData.GET_GROUP_SCHEDULE, rs2.getString("gname"), rs2.getString("gplace"),rs2.getDate("gdate"), null));
+									}
+									rs2.close();
+									ps2.close();
+								}
+								
+							}
+							rs.close();
+							ps.close();
+						} catch (SQLException e) {
+							e.printStackTrace();
+						}
+						break;
+					case ScheduleData.GROUP_MANAGE:
+						ArrayList<String> memberList = new ArrayList<>();
+						String sqlGM = "select * from meeting where mno = ?";
+						try {
+							PreparedStatement ps = con.prepareStatement(sqlGM);
+							ps.setInt(1, userNo);
+							ResultSet rs = ps.executeQuery();
+							while(rs.next()){
+								String sqlFindMN = "select mno from meeting where grno = ?"; 
+								PreparedStatement psFindMN = con.prepareStatement(sqlFindMN);
+								psFindMN.setInt(1, rs.getInt("grno"));
+								ResultSet rsFindMN = psFindMN.executeQuery();
+								while(rsFindMN.next()){
+									String sqlF = "select mname from member1 where mno = ?";
+									PreparedStatement psF = con.prepareStatement(sqlF);
+									psF.setInt(1, rsFindMN.getInt("mno"));
+									ResultSet rsF = psF.executeQuery();
+									while(rsF.next()){
+										memberList.add(rsFindMN.getString("mname"));
+									}
+								}
+								String sql1 = "select * from group1 where grno = ?";
+								PreparedStatement ps1 = con.prepareStatement(sql1);
+								ps1.setInt(1, rs.getInt("grno"));
+								ResultSet rs1 = ps1.executeQuery();
+								while(rs1.next()){
+									sendResponse(new ScheduleData(ScheduleData.GROUP_MANAGE, rs1.getString("gname"), rs1.getString("gplace"), memberList, rs1.getDate("gdate")));
+								}
+							}
+						} catch (SQLException e) {
+							e.printStackTrace();
+						}
+						
 						break;
 					}
 					

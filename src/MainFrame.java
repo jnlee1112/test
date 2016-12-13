@@ -148,6 +148,9 @@ public class MainFrame extends JFrame implements Runnable {
 						JOptionPane.showMessageDialog(null, "잘못된 비밀번호 입니다.");
 						logInPanel.clearField();
 						break;
+					case MemberData.ID_FOUND:
+						createNewGroupPanel.addToList(md.getID(), md.getMemberNo());
+						break;
 					case MemberData.ID_NOTFOUND:
 						JOptionPane.showMessageDialog(null, "존재하지 않는 아이디 입니다.");
 						logInPanel.clearField();
@@ -161,7 +164,16 @@ public class MainFrame extends JFrame implements Runnable {
 						break;
 					}
 				} else if (data instanceof ScheduleData) {
-
+					ScheduleData sd = (ScheduleData) data;
+					System.out.println(sd.getState());
+					switch (sd.getState()) {
+					case ScheduleData.CREATE_FAIL:
+						JOptionPane.showMessageDialog(null, "출석률이 75% 이하여서 그룹 등록 실패");
+						break;
+					case ScheduleData.CREATE_NEW_GROUP:
+						switchingPanel(GROUPMANAGE);
+						break;
+					}
 				}
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
@@ -172,7 +184,7 @@ public class MainFrame extends JFrame implements Runnable {
 		}
 	}
 
-	public void sendRequest(MemberData data) {
+	public void sendRequest(Object data) {
 		try {
 			oos.writeObject(data);
 		} catch (IOException e) {

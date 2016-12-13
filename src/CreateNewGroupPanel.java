@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
@@ -21,6 +22,7 @@ public class CreateNewGroupPanel extends JPanel implements ActionListener {
 	private JButton addBtn, deleteBtn, createGroupBtn, cancelBtn;
 	private JList addedList;
 	private ArrayList<String> idList = new ArrayList<>();
+	private ArrayList<Integer> mnoList = new ArrayList<>();
 	private MainFrame mf;
 
 	public CreateNewGroupPanel(MainFrame mf) {
@@ -90,18 +92,24 @@ public class CreateNewGroupPanel extends JPanel implements ActionListener {
 		if (arg0.getSource() == addBtn) { // 멤버 추가
 			memberID = memberIDtf.getText();
 			// 존재하는 아이디 인지 검사
-
-			idList.add(memberID);
-			addedList.setListData(idList.toArray());
+			for (String string : idList) {
+				if (string.equals(memberID)) {
+					JOptionPane.showMessageDialog(null, "이미 추가한 멤버입니다.");
+					return;
+				}
+			}
+			mf.sendRequest(new MemberData(MemberData.FIND_ID, memberID, null));
 			memberIDtf.setText("");
 		} else if (arg0.getSource() == deleteBtn) {// 멤버 삭제
 			int index = addedList.getSelectedIndex();
 			idList.remove(index);
+			mnoList.remove(index);
 			addedList.setListData(idList.toArray());
 		} else if (arg0.getSource() == createGroupBtn) {// 그룹 등록
 			// 등록 진행
 			groupN = groupNtf.getText();
 			place = placetf.getText();
+			mf.sendRequest(new ScheduleData(ScheduleData.CREATE_NEW_GROUP, groupN, place, mnoList));
 
 			// 초기화
 			memberIDtf.setText("");
@@ -120,7 +128,12 @@ public class CreateNewGroupPanel extends JPanel implements ActionListener {
 
 			mf.switchingPanel(MainFrame.GROUPMANAGE);
 		}
-
+	}
+	
+	public void addToList(String memberID, int mno){
+		idList.add(memberID);
+		mnoList.add(mno);
+		addedList.setListData(idList.toArray());
 	}
 
 }
