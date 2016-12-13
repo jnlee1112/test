@@ -12,14 +12,12 @@ public class LogInPanel extends JPanel implements ActionListener {
 	private int width = 290;
 	private int height = 450;
 
-	private MainFrame mf;
 	private JTextField tfID;
 	private JTextField tfPW;
 	private JButton btnLogIn;
 	private JButton btnRegiser;
 
-	public LogInPanel(MainFrame mf) {
-		this.mf = mf;
+	public LogInPanel() {
 		setSize(width, height);
 		setLayout(null);
 
@@ -55,10 +53,11 @@ public class LogInPanel extends JPanel implements ActionListener {
 
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == btnLogIn) { // 로그인 버튼
-			mf.sendRequest(new MemberData(MemberData.FIRST_CONNECT, tfID.getText(), tfPW.getText()));
+			MainFrame.getInstance()
+					.sendRequest(new MemberData(MemberData.FIRST_CONNECT, tfID.getText(), tfPW.getText()));
 		}
 		if (e.getSource() == btnRegiser) { // 회원등록 버튼
-			mf.switchingPanel(MainFrame.REGISERT);
+			MainFrame.getInstance().switchingPanel(MainFrame.REGISTER);
 		}
 	}
 

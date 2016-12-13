@@ -6,7 +6,6 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import javax.print.attribute.standard.SheetCollate;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.WindowConstants;
@@ -14,28 +13,34 @@ import javax.swing.WindowConstants;
 public class MainFrame extends JFrame implements Runnable {
 
 	public static final int LOGIN = 0;
-	public static final int REGISERT = 1;
+	public static final int REGISTER = 1;
 	public static final int MAIN = 2;
 	public static final int GROUPMANAGE = 3;
 	public static final int CREATEGROUP = 4;
 	public static final int MYSCHEDULE = 5;
 
-	private LogInPanel logInPanel = new LogInPanel(this);
-	private MainPanel mainPane = new MainPanel(this);
-	private CreateNewGroupPanel createNewGroupPanel = new CreateNewGroupPanel(this);
-	private GroupManagePanel groupManagePanel = new GroupManagePanel(this);
-	private MySchedulePanel mySchedulePanel = new MySchedulePanel(this);
-	private RegisetPanel regisetPanel = new RegisetPanel(this);
+	private static MainFrame mf = new MainFrame();
+
+	private LogInPanel logInPanel = new LogInPanel();
+	private MainPanel mainPane = new MainPanel();
+	private CreateNewGroupPanel createNewGroupPanel = new CreateNewGroupPanel();
+	private GroupManagePanel groupManagePanel = new GroupManagePanel();
+	private MySchedulePanel mySchedulePanel = new MySchedulePanel();
+	private RegisetPanel regisetPanel = new RegisetPanel();
 
 	private Socket socket;
 	private ObjectOutputStream oos;
 	private ObjectInputStream ois;
 
 	public static void main(String[] args) {
-		new MainFrame();
+		MainFrame.getInstance();
 	}
 
-	public MainFrame() { // GUI 积己
+	public static MainFrame getInstance() {
+		return mf;
+	}
+
+	private MainFrame() { // GUI 积己
 		setTitle("Group Schedule");
 		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		setPersnalCloseOperation();
@@ -75,7 +80,7 @@ public class MainFrame extends JFrame implements Runnable {
 
 	private void connect() { // 辑滚 楷搬
 		try {
-			socket = new Socket("203.233.196.196", 8888);
+			socket = new Socket("203.233.196.93", 8888);
 			oos = new ObjectOutputStream(socket.getOutputStream());
 			ois = new ObjectInputStream(socket.getInputStream());
 			new Thread(this).start();
@@ -109,7 +114,7 @@ public class MainFrame extends JFrame implements Runnable {
 			setSize(logInPanel.getWidth(), logInPanel.getHeight());
 			logInPanel.setVisible(true);
 			break;
-		case REGISERT:
+		case REGISTER:
 			setSize(regisetPanel.getWidth(), regisetPanel.getHeight() + 20);
 			regisetPanel.setVisible(true);
 			break;
@@ -142,6 +147,7 @@ public class MainFrame extends JFrame implements Runnable {
 					System.out.println(md.getState());
 					switch (md.getState()) {
 					case MemberData.LOGIN_SUCCESS:
+						getInitialData();
 						switchingPanel(MAIN);
 						break;
 					case MemberData.PW_MISSMATCH:
@@ -161,7 +167,13 @@ public class MainFrame extends JFrame implements Runnable {
 						break;
 					}
 				} else if (data instanceof ScheduleData) {
-
+					ScheduleData sd = (ScheduleData) data;
+					switch (sd.getState()) {
+					case ScheduleData.GET_PERSONAL_SCHEDULE:
+						System.out.println(sd.getDate());
+						mainPane.addPersnalSchedule(sd);
+						break;
+					}
 				}
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
@@ -172,7 +184,12 @@ public class MainFrame extends JFrame implements Runnable {
 		}
 	}
 
-	public void sendRequest(MemberData data) {
+	public void getInitialData() {
+		sendRequest(new ScheduleData(ScheduleData.GET_PERSONAL_SCHEDULE, null, null));
+		sendRequest(new ScheduleData(ScheduleData.GET_GROUP_SCHEDULE, null, null));
+	}
+
+	public void sendRequest(Object data) {
 		try {
 			oos.writeObject(data);
 		} catch (IOException e) {

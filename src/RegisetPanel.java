@@ -16,10 +16,7 @@ public class RegisetPanel extends JPanel implements ActionListener {
 	private JButton btnOk, btnCancle;
 	private JTextField tfEmail;
 
-	private MainFrame mf;
-
-	public RegisetPanel(MainFrame mf) {
-		this.mf = mf;
+	public RegisetPanel() {
 		setSize(width, height);
 		setLayout(new GridLayout(0, 1, 0, 0));
 
@@ -66,11 +63,11 @@ public class RegisetPanel extends JPanel implements ActionListener {
 
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == btnOk) {
-			mf.sendRequest(new MemberData(MemberData.REGISTER, tfName.getText(), tfID.getText(), tfPW.getText(),
-					tfEmail.getText()));
+			MainFrame.getInstance().sendRequest(new MemberData(MemberData.REGISTER, tfName.getText(), tfID.getText(),
+					tfPW.getText(), tfEmail.getText()));
 		} else if (e.getSource() == btnCancle) {
 			clearField();
-			mf.switchingPanel(MainFrame.LOGIN);
+			MainFrame.getInstance().switchingPanel(MainFrame.LOGIN);
 		}
 	}
 

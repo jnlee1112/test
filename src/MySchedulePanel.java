@@ -12,12 +12,10 @@ public class MySchedulePanel extends JPanel implements ActionListener {
 	private int width = 1000;
 	private int height = 700;
 
-	private MainFrame mf;
 	private JButton cancleBtn;
 	private JButton okBtn;
 
-	public MySchedulePanel(MainFrame mf) {
-		this.mf = mf;
+	public MySchedulePanel() {
 		setSize(width, height);
 		setLayout(new BorderLayout());
 
@@ -40,10 +38,10 @@ public class MySchedulePanel extends JPanel implements ActionListener {
 
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == okBtn) { // 확인 버튼
-			mf.switchingPanel(MainFrame.MAIN);
+			MainFrame.getInstance().switchingPanel(MainFrame.MAIN);
 		}
 		if (e.getSource() == cancleBtn) { // 취소 버튼
-			mf.switchingPanel(MainFrame.MAIN);
+			MainFrame.getInstance().switchingPanel(MainFrame.MAIN);
 		}
 	}
 }

@@ -10,12 +10,15 @@ public class ScheduleData implements Serializable {
 	public static final int GROUP_MANAGE = 5;
 	public static final int CREATE_NEW_GROUP = 6;
 	public static final int CREATE_FAIL = 7;
-	
+	public static final int GET_PERSONAL_SCHEDULE = 8;
+	public static final int GET_GROUP_SCHEDULE = 9;
+	public static final int AGREE = 10;
 
 	private int state;
 	private String grName;
 	private String place;
 	private ArrayList<Integer> memberList;
+	private ArrayList<String> memberNameL;
 	private ArrayList<Date> dateList;
 	private Date date;
 	private String title;
@@ -26,6 +29,35 @@ public class ScheduleData implements Serializable {
 		this.grName = grName;
 		this.place = place;
 		this.memberList = memberList;
+	}
+
+	public ScheduleData(int state, String grName, String place, Date date, ArrayList<Integer> memberList) {
+		this.state = state;
+		this.grName = grName;
+		this.place = place;
+		this.date = date;
+		this.memberList = memberList;
+	}
+
+	public ScheduleData(int state, String grName, String place, ArrayList<String> memberNameL, Date date) {
+		this.state = state;
+		this.grName = grName;
+		this.place = place;
+		this.date = date;
+		this.memberNameL = memberNameL;
+	}
+
+	public ScheduleData(int state, String title, String place) {
+		this.state = state;
+		this.title = title;
+		this.place = place;
+	}
+
+	public ScheduleData(int state, String title, String place, Date date) {
+		this.state = state;
+		this.title = title;
+		this.place = place;
+		this.date = date;
 	}
 
 	public int getState() {

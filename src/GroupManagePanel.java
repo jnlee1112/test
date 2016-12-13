@@ -14,13 +14,11 @@ public class GroupManagePanel extends JPanel implements ActionListener {
 	private int width = 400;
 	private int height = 500;
 	private ArrayList<MessagePanel> list = new ArrayList<>();
-	private MainFrame mf;
 	private JButton createNewGroupBtn;
 	private JButton backToMainBtn;
 	private JPanel centerPanel;
 
-	public GroupManagePanel(MainFrame mf) {
-		this.mf = mf;
+	public GroupManagePanel() {
 		setSize(width, height);
 		setLayout(new BorderLayout());
 
@@ -67,10 +65,10 @@ public class GroupManagePanel extends JPanel implements ActionListener {
 
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == createNewGroupBtn) {
-			mf.switchingPanel(MainFrame.CREATEGROUP);
+			MainFrame.getInstance().switchingPanel(MainFrame.CREATEGROUP);
 		}
 		if (e.getSource() == backToMainBtn) {
-			mf.switchingPanel(MainFrame.MAIN);
+			MainFrame.getInstance().switchingPanel(MainFrame.MAIN);
 		}
 	}
 }

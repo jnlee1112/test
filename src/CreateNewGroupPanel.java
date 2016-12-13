@@ -21,10 +21,8 @@ public class CreateNewGroupPanel extends JPanel implements ActionListener {
 	private JButton addBtn, deleteBtn, createGroupBtn, cancelBtn;
 	private JList addedList;
 	private ArrayList<String> idList = new ArrayList<>();
-	private MainFrame mf;
 
-	public CreateNewGroupPanel(MainFrame mf) {
-		this.mf = mf;
+	public CreateNewGroupPanel() {
 		setSize(width, height);
 		setLayout(new BorderLayout());
 
@@ -110,7 +108,7 @@ public class CreateNewGroupPanel extends JPanel implements ActionListener {
 			idList = new ArrayList<>();
 			addedList.setListData(idList.toArray());
 
-			mf.switchingPanel(MainFrame.GROUPMANAGE);
+			MainFrame.getInstance().switchingPanel(MainFrame.GROUPMANAGE);
 		} else if (arg0.getSource() == cancelBtn) { // 이전 화면
 			memberIDtf.setText("");
 			groupNtf.setText("");
@@ -118,7 +116,7 @@ public class CreateNewGroupPanel extends JPanel implements ActionListener {
 			idList = new ArrayList<>();
 			addedList.setListData(idList.toArray());
 
-			mf.switchingPanel(MainFrame.GROUPMANAGE);
+			MainFrame.getInstance().switchingPanel(MainFrame.GROUPMANAGE);
 		}
 
 	}
