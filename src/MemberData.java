@@ -34,9 +34,10 @@ public class MemberData implements Serializable {
 		this.email = email;
 	}
 	
-	public MemberData(int state, int memberNo) {
+	public MemberData(int state, int memberNo, String ID) {
 		this.state = state;
 		this.memberNo = memberNo;
+		this.ID = ID;
 	}
 	
 	

@@ -154,6 +154,9 @@ public class MainFrame extends JFrame implements Runnable {
 						JOptionPane.showMessageDialog(null, "잘못된 비밀번호 입니다.");
 						logInPanel.clearField();
 						break;
+					case MemberData.ID_FOUND:
+						createNewGroupPanel.addToList(md.getID(), md.getMemberNo());
+						break;
 					case MemberData.ID_NOTFOUND:
 						JOptionPane.showMessageDialog(null, "존재하지 않는 아이디 입니다.");
 						logInPanel.clearField();
@@ -168,10 +171,20 @@ public class MainFrame extends JFrame implements Runnable {
 					}
 				} else if (data instanceof ScheduleData) {
 					ScheduleData sd = (ScheduleData) data;
+<<<<<<< HEAD
 					switch (sd.getState()) {
 					case ScheduleData.GET_PERSONAL_SCHEDULE:
 						System.out.println(sd.getDate());
 						mainPane.addPersnalSchedule(sd);
+=======
+					System.out.println(sd.getState());
+					switch (sd.getState()) {
+					case ScheduleData.CREATE_FAIL:
+						JOptionPane.showMessageDialog(null, "출석률이 75% 이하여서 그룹 등록 실패");
+						break;
+					case ScheduleData.CREATE_NEW_GROUP:
+						switchingPanel(GROUPMANAGE);
+>>>>>>> 5ab1e81e6d754febb4c11ddb8998ab01bbc905ed
 						break;
 					}
 				}
@@ -184,11 +197,14 @@ public class MainFrame extends JFrame implements Runnable {
 		}
 	}
 
+<<<<<<< HEAD
 	public void getInitialData() {
 		sendRequest(new ScheduleData(ScheduleData.GET_PERSONAL_SCHEDULE, null, null));
 		sendRequest(new ScheduleData(ScheduleData.GET_GROUP_SCHEDULE, null, null));
 	}
 
+=======
+>>>>>>> 5ab1e81e6d754febb4c11ddb8998ab01bbc905ed
 	public void sendRequest(Object data) {
 		try {
 			oos.writeObject(data);
