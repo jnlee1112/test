@@ -43,7 +43,6 @@ public class Server implements Runnable {
 				Object data = (Object) ois.readObject();
 				if (data instanceof MemberData) { // MemberData
 					MemberData md = (MemberData) data;
-
 					switch (md.getState()) {
 					case MemberData.FIRST_CONNECT:
 						System.out.println("FIRST_CONNECT");
@@ -69,7 +68,6 @@ public class Server implements Runnable {
 						} catch (SQLException e) {
 							e.printStackTrace();
 						}
-						System.out.println(loginState);
 						sendResponse(new MemberData(loginState, md.getID(), md.getPW()));
 						break;
 					case MemberData.REGISTER:
@@ -90,14 +88,14 @@ public class Server implements Runnable {
 						sendResponse(new MemberData(MemberData.REGISTER_SUCCESS, null, null));
 						break;
 					case MemberData.FIND_ID:
-						String sqlF = "select mno from member1 where id = ?";
+						String sqlF = "select mno, id from member1 where id = ?";
 						try {
 							PreparedStatement ps = con.prepareStatement(sqlF);
-							ps.setString(1, "id");;
+							ps.setString(1, md.getID());
+
 							ResultSet rs = ps.executeQuery();
 							if (rs.next()) {
-								sendResponse(
-										new MemberData(MemberData.ID_FOUND, rs.getInt("mno"), rs.getString("mname")));
+								sendResponse(new MemberData(MemberData.ID_FOUND, rs.getInt("mno"), rs.getString("id")));
 							} else {
 								sendResponse(new MemberData(MemberData.ID_NOTFOUND, -1, null));
 							}
@@ -126,6 +124,7 @@ public class Server implements Runnable {
 						System.out.println("뉴그룹등록");
 						ArrayList<Integer> memberL = new ArrayList<>();
 						memberL.add(userNo);
+
 						int possibleDates[][] = new int[15][32]; // 각 개인이 가능한
 						memberL = sd.getMemberNoList();// 날짜의 집합
 						for (int memberNO : memberL) {
@@ -242,6 +241,8 @@ public class Server implements Runnable {
 							ps.setInt(1, userNo);
 							ResultSet rs = ps.executeQuery();
 							while (rs.next()) {
+								System.out.println(rs.getString(1) + "<-sdate" + rs.getString(2) + "<-title"
+										+ rs.getString(3) + "<-splace");
 								sendResponse(new ScheduleData(ScheduleData.GET_PERSONAL_SCHEDULE, rs.getString("title"),
 										rs.getString("splace"), rs.getDate("sdate")));
 							}
