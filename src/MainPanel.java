@@ -13,13 +13,13 @@ public class MainPanel extends JPanel implements ActionListener {
 
 	private JButton groupManageBtn;
 	private JButton myScheduleBtn;
-	private PersonalCalendar centerPanel;
+	private MainCalendar centerPanel;
 
 	public MainPanel() {
 		setSize(width, height);
 		setLayout(new BorderLayout());
 
-		centerPanel = new PersonalCalendar();
+		centerPanel = new MainCalendar();
 		centerPanel.setPreferredSize(new Dimension(700, 650));
 		JPanel southPanel = new JPanel();
 		southPanel.setPreferredSize(new Dimension(600, 70));

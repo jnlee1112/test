@@ -21,12 +21,12 @@ public class MainFrame extends JFrame implements Runnable {
 
 	private static MainFrame mf = new MainFrame();
 
-	private LogInPanel logInPanel = new LogInPanel();
-	private MainPanel mainPane = new MainPanel();
-	private CreateNewGroupPanel createNewGroupPanel = new CreateNewGroupPanel();
-	private GroupManagePanel groupManagePanel = new GroupManagePanel();
-	private MySchedulePanel mySchedulePanel = new MySchedulePanel();
-	private RegisetPanel regisetPanel = new RegisetPanel();
+	private LogInPanel logInPanel;
+	private MainPanel mainPane;
+	private CreateNewGroupPanel createNewGroupPanel;
+	private GroupManagePanel groupManagePanel;
+	private MySchedulePanel mySchedulePanel;
+	private RegisetPanel regisetPanel;
 
 	private Socket socket;
 	private ObjectOutputStream oos;
@@ -41,6 +41,7 @@ public class MainFrame extends JFrame implements Runnable {
 	}
 
 	private MainFrame() { // GUI 생성
+		connect();
 		setTitle("Group Schedule");
 		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		setPersnalCloseOperation();
@@ -49,7 +50,6 @@ public class MainFrame extends JFrame implements Runnable {
 		initialize();
 		switchingPanel(LOGIN);
 		setVisible(true);
-		connect();
 	}
 
 	private void setPersnalCloseOperation() {
@@ -94,6 +94,12 @@ public class MainFrame extends JFrame implements Runnable {
 	}
 
 	private void initialize() { // 각 화면 등록
+		logInPanel = new LogInPanel();
+		mainPane = new MainPanel();
+		createNewGroupPanel = new CreateNewGroupPanel();
+		groupManagePanel = new GroupManagePanel();
+		mySchedulePanel = new MySchedulePanel();
+		regisetPanel = new RegisetPanel();
 		add(logInPanel);
 		add(regisetPanel);
 		add(mainPane);
@@ -172,7 +178,6 @@ public class MainFrame extends JFrame implements Runnable {
 					ScheduleData sd = (ScheduleData) data;
 					switch (sd.getState()) {
 					case ScheduleData.GET_PERSONAL_SCHEDULE:
-						System.out.println(sd.getDate());
 						mainPane.addPersnalSchedule(sd);
 						break;
 					case ScheduleData.CREATE_FAIL:

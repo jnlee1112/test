@@ -14,6 +14,14 @@ public class ScheduleData implements Serializable {
 	public static final int GET_GROUP_SCHEDULE = 9;
 	public static final int AGREE = 10;
 
+	public String personalToString() {
+		return "날짜 :  " + date + "  |   제목 :  " + title + "  |   장소 :  " + place;
+	}
+
+	public String groupToString() {
+		return "date=" + date + "\n" + "title" + title + "\n" + "place=" + place;
+	}
+
 	private int state;
 	private String grName;
 	private String place;

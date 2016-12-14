@@ -13,8 +13,7 @@ import javax.swing.JTextField;
 
 public class PersnalSchedulePanel extends JPanel implements ActionListener {
 
-	private boolean isAdd;
-	private Calendar calendar;
+	private ScheduleData sd;
 	private int width = 350;
 	private int height = 300;
 	private JButton btnDelete;
@@ -23,9 +22,8 @@ public class PersnalSchedulePanel extends JPanel implements ActionListener {
 	private JButton btnOK;
 	private JFrame frame;
 
-	public PersnalSchedulePanel(boolean isAdd, Calendar calendar, JFrame frame) {
-		this.isAdd = isAdd;
-		this.calendar = calendar;
+	public PersnalSchedulePanel(ScheduleData sd, JFrame frame) {
+		this.sd = sd;
 		this.frame = frame;
 		setSize(width, height);
 		setLayout(null);
@@ -57,30 +55,33 @@ public class PersnalSchedulePanel extends JPanel implements ActionListener {
 		btnDelete.setBounds(203, 169, 97, 23);
 		btnDelete.addActionListener(this);
 		add(btnDelete);
+
+		if (sd.getState() != -1) {
+			tfPlace.setText(sd.getPlace());
+			tfTitle.setText(sd.getTitle());
+		}
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		long d = calendar.getTimeInMillis();
-		Date date = new Date(d);
 		if (e.getSource() == btnOK) {
 			if (tfTitle.getText().trim().isEmpty()) {
 				JOptionPane.showMessageDialog(null, "제목이 비었습니다.");
 			} else if (tfPlace.getText().trim().isEmpty()) {
 				JOptionPane.showMessageDialog(null, "장소가 비었습니다.");
-			} else if (isAdd) {
+			} else if (sd.getState() == -1) {
 				MainFrame.getInstance().sendRequest(new ScheduleData(ScheduleData.PERSNAL_SCHEDULE_ADD,
-						tfTitle.getText(), tfPlace.getText(), date));
+						tfTitle.getText(), tfPlace.getText(), sd.getDate()));
 				frame.dispose();
 			} else {
 				MainFrame.getInstance().sendRequest(new ScheduleData(ScheduleData.PERSNAL_SCHEDULE_UPDATE,
-						tfTitle.getText(), tfPlace.getText(), date));
+						tfTitle.getText(), tfPlace.getText(), sd.getDate()));
 				frame.dispose();
 			}
 		}
 		if (e.getSource() == btnDelete) {
-			if (!isAdd) {
+			if (sd.getState() != -1) {
 				MainFrame.getInstance()
-						.sendRequest(new ScheduleData(ScheduleData.PERSNAL_SCHEDULE_DELETE, null, null, date));
+						.sendRequest(new ScheduleData(ScheduleData.PERSNAL_SCHEDULE_DELETE, null, null, sd.getDate()));
 				frame.dispose();
 				MainFrame.getInstance().updateCalendar();
 				MainFrame.getInstance().getInitialData();

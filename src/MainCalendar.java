@@ -9,15 +9,15 @@ import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-import java.util.HashSet;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-class PersonalCalendar extends JPanel implements ActionListener {
+class MainCalendar extends JPanel implements ActionListener {
 
 	private ArrayList<ScheduleData> personalScheduleSet;
 	private ArrayList<ScheduleData> groupScheduleSet;
@@ -33,14 +33,16 @@ class PersonalCalendar extends JPanel implements ActionListener {
 	private JPanel panNorth;
 	private JPanel panCenter;
 	private JTextField txtMonth, txtYear;
+	private JLabel lblShceduleInfo;
 
-	public PersonalCalendar() {
+	public MainCalendar() {
 		today = Calendar.getInstance();
 		cal = new GregorianCalendar();
 		year = today.get(Calendar.YEAR);
 		month = today.get(Calendar.MONTH) + 1;
 
 		panNorth = new JPanel();
+		panNorth.setBounds(20, 10, 349, 42);
 		panNorth.add(btnLastYear = new JButton(" ↓ "));
 		panNorth.add(btnLastMonth = new JButton(" ← "));
 
@@ -53,25 +55,31 @@ class PersonalCalendar extends JPanel implements ActionListener {
 
 		txtYear.setEnabled(false);
 		txtMonth.setEnabled(false);
+		setLayout(null);
 
 		panNorth.add(btnNextMonth = new JButton(" → "));
 		panNorth.add(btnNextYear = new JButton(" ↑ "));
 
-		add(panNorth, "North");
+		add(panNorth);
 
 		panCenter = new JPanel(new GridLayout(7, 7));
+		panCenter.setBounds(20, 72, 349, 181);
 		f = new Font("Sherif", Font.BOLD, 12);
 
 		gridInit();
 		calSet();
 		hideInit();
-		add(panCenter, "Center");
+		add(panCenter);
 		setButton();
 
 		btnLastMonth.addActionListener(this);
 		btnLastYear.addActionListener(this);
 		btnNextMonth.addActionListener(this);
 		btnNextYear.addActionListener(this);
+
+		lblShceduleInfo = new JLabel("");
+		lblShceduleInfo.setBounds(20, 269, 349, 31);
+		add(lblShceduleInfo);
 	}
 
 	public void setButton() {
@@ -90,8 +98,9 @@ class PersonalCalendar extends JPanel implements ActionListener {
 				c.set(Calendar.YEAR, year);
 				c.set(Calendar.MONTH, (month - 1));
 				c.set(Calendar.DATE, day);
+				ScheduleData scheduleData = new ScheduleData(-1, null, null);
 				Date d = new Date(c.getTimeInMillis());
-				boolean isAdd = true;
+				scheduleData.setDate(d);
 				for (ScheduleData sd : groupScheduleSet) {
 					if (sd.getDate().toString().equals(d.toString())) {
 						JOptionPane.showMessageDialog(null, "넌 못지나간다.");
@@ -99,14 +108,12 @@ class PersonalCalendar extends JPanel implements ActionListener {
 				}
 				for (ScheduleData sd : personalScheduleSet) {
 					if (sd.getDate().toString().equals(d.toString()))
-						isAdd = false;
+						scheduleData = sd;
 				}
-				System.out.println(d);
-				System.out.println(isAdd);
 				JFrame f = new JFrame(year + "년" + month + "월" + day + "일");
-				PersnalSchedulePanel psp = new PersnalSchedulePanel(isAdd, c, f);
+				PersnalSchedulePanel psp = new PersnalSchedulePanel(scheduleData, f);
 				f.setSize(psp.getWidth(), psp.getHeight() + 30);
-				f.add(psp);
+				f.getContentPane().add(psp);
 				f.setLocationRelativeTo(null);
 				f.setVisible(true);
 			}
@@ -125,7 +132,25 @@ class PersonalCalendar extends JPanel implements ActionListener {
 		} else if (Integer.parseInt(e.getActionCommand()) >= 1 && Integer.parseInt(e.getActionCommand()) <= 31) {
 			day = Integer.parseInt(e.getActionCommand());
 			calSet();
+			Calendar c = (Calendar) cal.clone();
+			c.set(Calendar.YEAR, year);
+			c.set(Calendar.MONTH, (month - 1));
+			c.set(Calendar.DATE, day);
+			Date d = new Date(c.getTimeInMillis());
+			for (ScheduleData sd : personalScheduleSet) {
+				if (sd.getDate().toString().equals(d.toString())) {
+					lblShceduleInfo.setText(sd.personalToString());
+					return;
+				}
+			}
+			for (ScheduleData sd : groupScheduleSet) {
+				if (sd.getDate().toString().equals(d.toString())) {
+					lblShceduleInfo.setText(sd.groupToString());
+					return;
+				}
+			}
 		}
+		lblShceduleInfo.setText("");
 	}
 
 	public void addPersnalSchedule(ScheduleData sd) {

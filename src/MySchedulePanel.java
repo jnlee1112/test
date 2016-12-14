@@ -9,8 +9,8 @@ import javax.swing.JPanel;
 
 public class MySchedulePanel extends JPanel implements ActionListener {
 
-	private int width = 1000;
-	private int height = 700;
+	private int width = 500;
+	private int height = 400;
 
 	private JButton cancleBtn;
 	private JButton okBtn;
@@ -19,7 +19,7 @@ public class MySchedulePanel extends JPanel implements ActionListener {
 		setSize(width, height);
 		setLayout(new BorderLayout());
 
-		JPanel centerPanel = new JPanel();
+		PossibleCalendar centerPanel = new PossibleCalendar();
 		centerPanel.setPreferredSize(new Dimension(700, 650));
 		JPanel southPanel = new JPanel();
 		southPanel.setPreferredSize(new Dimension(600, 100));
