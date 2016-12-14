@@ -117,7 +117,6 @@ public class CreateNewGroupPanel extends JPanel implements ActionListener {
 			idList = new ArrayList<>();
 			addedList.setListData(idList.toArray());
 
-			MainFrame.getInstance().switchingPanel(MainFrame.GROUPMANAGE);
 		} else if (arg0.getSource() == cancelBtn) { // 이전 화면
 			memberIDtf.setText("");
 			groupNtf.setText("");

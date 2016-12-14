@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /ConnectionManager.class
 /CreateNewGroupPanel.class
 /GroupManagePanel$MessagePanel.class
@@ -30,3 +31,6 @@
 /PersonalCalendar$MouseClick.class
 /MainCalendar$MouseClick.class
 /MainCalendar.class
+=======
+/MailManager$1.class
+>>>>>>> 83d6d48a1c4c610bd391baa6b42f16c8e367b780

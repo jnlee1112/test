@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -80,7 +81,7 @@ public class MainFrame extends JFrame implements Runnable {
 
 	private void connect() { // 서버 연결
 		try {
-			socket = new Socket("203.233.196.93", 8888);
+			socket = new Socket("localhost", 8888);//203.233.196.93
 			oos = new ObjectOutputStream(socket.getOutputStream());
 			ois = new ObjectInputStream(socket.getInputStream());
 			new Thread(this).start();
@@ -185,6 +186,9 @@ public class MainFrame extends JFrame implements Runnable {
 						break;
 					case ScheduleData.CREATE_NEW_GROUP:
 						switchingPanel(GROUPMANAGE);
+						break;
+					case ScheduleData.GROUP_MANAGE: 
+						groupManagePanel.updateSD(sd);
 						break;
 					}
 				}

@@ -7,26 +7,62 @@ import java.util.ArrayList;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.ImageIcon;
 
 public class GroupManagePanel extends JPanel implements ActionListener {
 
 	private int width = 400;
 	private int height = 500;
-	private ArrayList<MessagePanel> list = new ArrayList<>();
+	private ArrayList<ScheduleData> list = new ArrayList<>();
+	int index;
 	private JButton createNewGroupBtn;
 	private JButton backToMainBtn;
 	private JPanel centerPanel;
+	private JTextArea textArea;
+	private JButton leftBtn;
+	private JButton rightBtn;
+	private JButton oBtn;
+	private JButton xBtn;
 
 	public GroupManagePanel() {
 		setSize(width, height);
 		setLayout(new BorderLayout());
 
 		centerPanel = new JPanel();
+		centerPanel.setBackground(new Color(255, 250, 205));
 		centerPanel.setSize(width, 500);
 		JPanel southPanel = new JPanel();
 		southPanel.setPreferredSize(new Dimension(width, 100));
-		southPanel.setBackground(Color.DARK_GRAY);
+		southPanel.setBackground(new Color(128, 128, 128));
+		
+		textArea = new JTextArea();
+		textArea.setBounds(86, 74, 228, 191);
+		centerPanel.add(textArea);
+		
+		leftBtn = new JButton("\u25C0");
+		leftBtn.setForeground(new Color(0, 0, 0));
+		leftBtn.setBackground(new Color(255, 255, 0));
+		leftBtn.setBounds(12, 154, 62, 45);
+		centerPanel.add(leftBtn);
+		leftBtn.addActionListener(this);
+		
+		rightBtn = new JButton("\u25B6");
+		rightBtn.setBounds(326, 154, 62, 45);
+		centerPanel.add(rightBtn);
+		rightBtn.addActionListener(this);
+		
+		oBtn = new JButton("O");
+		oBtn.setBounds(86, 314, 97, 23);
+		centerPanel.add(oBtn);
+		oBtn.addActionListener(this);
+		
+		xBtn = new JButton("X");
+		xBtn.setBounds(217, 314, 97, 23);
+		centerPanel.add(xBtn);
+		xBtn.addActionListener(this);
 
 		createNewGroupBtn = new JButton("새그룹 추가");
 		createNewGroupBtn.addActionListener(this);
@@ -35,32 +71,29 @@ public class GroupManagePanel extends JPanel implements ActionListener {
 		southPanel.add(createNewGroupBtn);
 		southPanel.add(backToMainBtn);
 		add(centerPanel);
+		centerPanel.setLayout(null);
+		
+		updateTextArea(list);
+		
 		add(southPanel, BorderLayout.SOUTH);
 	}
-
-	class MessagePanel extends JPanel implements ActionListener {
-		JLabel message;
-		JButton agreeBtn = new JButton(" O ");
-		JButton disagreelBtn = new JButton(" X ");
-
-		public MessagePanel(String str) {
-			setPreferredSize(new Dimension(width, 40));
-			message = new JLabel(str);
-			agreeBtn.addActionListener(this);
-			disagreelBtn.addActionListener(this);
-			add(message);
-			add(agreeBtn);
-			add(disagreelBtn);
+	
+	public void updateSD(ScheduleData sd){
+		textArea.setText("");
+		MainFrame.getInstance().sendRequest(new ScheduleData(ScheduleData.AGREE, null, null));
+		list.add(sd);
+	}
+	
+	public void updateTextArea(ArrayList<ScheduleData> list){
+		String groupName = "<그룹명>"+list.get(index)+"\n";
+		String groupDate = "<날짜>"+list.get(index).getDate()+"\n";
+		String groupMember = "<멤버>";
+		for (String mn : list.get(index).getMemberNameL()) {
+			groupMember += mn+" ";
 		}
-
-		public void actionPerformed(ActionEvent e) {
-			if (e.getSource() == agreeBtn) {
-				System.out.println("동의");
-			}
-			if (e.getSource() == disagreelBtn) {
-				System.out.println("거부");
-			}
-		}
+		textArea.append(groupName);
+		textArea.append(groupDate);
+		textArea.append(groupMember);
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -69,6 +102,30 @@ public class GroupManagePanel extends JPanel implements ActionListener {
 		}
 		if (e.getSource() == backToMainBtn) {
 			MainFrame.getInstance().switchingPanel(MainFrame.MAIN);
+		}
+		if (e.getSource() == leftBtn){
+			if (index > 0) {
+				index--;
+				updateTextArea(list);
+			}else{
+				JOptionPane.showMessageDialog(null, "첫번째 알림입니다.");
+			}
+		}
+		if (e.getSource() == rightBtn){
+			if (index <list.size()) {
+				index++;
+				updateTextArea(list);
+			}else{
+				JOptionPane.showMessageDialog(null, "마지막 알림입니다.");
+			}
+		}
+		if (e.getSource() == oBtn){
+			MainFrame.getInstance().sendRequest(new ScheduleData(ScheduleData.AGREE, true, list.get(index).getGrno()));
+			list.remove(index);
+		}
+		if (e.getSource() == xBtn){
+			MainFrame.getInstance().sendRequest(new ScheduleData(ScheduleData.AGREE, false, list.get(index).getGrno()));
+			list.remove(index);
 		}
 	}
 }
