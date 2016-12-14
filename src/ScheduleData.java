@@ -12,7 +12,8 @@ public class ScheduleData implements Serializable {
 	public static final int CREATE_FAIL = 7;
 	public static final int GET_PERSONAL_SCHEDULE = 8;
 	public static final int GET_GROUP_SCHEDULE = 9;
-	public static final int AGREE = 10;
+	public static final int GET_POSSIBLE_DATE = 10;
+	public static final int AGREE = 11;
 
 	public String personalToString() {
 		return "날짜 :  " + date + "  |   제목 :  " + title + "  |   장소 :  " + place;
@@ -68,11 +69,16 @@ public class ScheduleData implements Serializable {
 		this.place = place;
 		this.date = date;
 	}
-	
-	public ScheduleData(int state, boolean agree, int grno){
+
+	public ScheduleData(int state, boolean agree, int grno) {
 		this.state = state;
 		this.agree = agree;
 		this.grno = grno;
+	}
+
+	public ScheduleData(int state, ArrayList<Date> dateList) {
+		this.state = state;
+		this.dateList = dateList;
 	}
 
 	public int getState() {
@@ -154,7 +160,5 @@ public class ScheduleData implements Serializable {
 	public void setGrno(int grno) {
 		this.grno = grno;
 	}
-	
-	
 
 }

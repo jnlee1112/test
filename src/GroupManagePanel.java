@@ -17,7 +17,7 @@ public class GroupManagePanel extends JPanel implements ActionListener {
 	private int width = 400;
 	private int height = 500;
 	private ArrayList<ScheduleData> list = new ArrayList<>();
-	int index;
+	private int index;
 	private JButton createNewGroupBtn;
 	private JButton backToMainBtn;
 	private JPanel centerPanel;
@@ -37,28 +37,28 @@ public class GroupManagePanel extends JPanel implements ActionListener {
 		JPanel southPanel = new JPanel();
 		southPanel.setPreferredSize(new Dimension(width, 100));
 		southPanel.setBackground(new Color(128, 128, 128));
-		
+
 		textArea = new JTextArea();
 		textArea.setBounds(86, 74, 228, 191);
 		centerPanel.add(textArea);
-		
+
 		leftBtn = new JButton("\u25C0");
 		leftBtn.setForeground(new Color(0, 0, 0));
 		leftBtn.setBackground(new Color(255, 255, 0));
 		leftBtn.setBounds(12, 154, 62, 45);
 		centerPanel.add(leftBtn);
 		leftBtn.addActionListener(this);
-		
+
 		rightBtn = new JButton("\u25B6");
 		rightBtn.setBounds(326, 154, 62, 45);
 		centerPanel.add(rightBtn);
 		rightBtn.addActionListener(this);
-		
+
 		oBtn = new JButton("O");
 		oBtn.setBounds(86, 314, 97, 23);
 		centerPanel.add(oBtn);
 		oBtn.addActionListener(this);
-		
+
 		xBtn = new JButton("X");
 		xBtn.setBounds(217, 314, 97, 23);
 		centerPanel.add(xBtn);
@@ -72,24 +72,24 @@ public class GroupManagePanel extends JPanel implements ActionListener {
 		southPanel.add(backToMainBtn);
 		add(centerPanel);
 		centerPanel.setLayout(null);
-		
-		updateTextArea(list);
-		
+
 		add(southPanel, BorderLayout.SOUTH);
 	}
-	
-	public void updateSD(ScheduleData sd){
-		textArea.setText("");
-		MainFrame.getInstance().sendRequest(new ScheduleData(ScheduleData.AGREE, null, null));
+
+	public void updateSD(ScheduleData sd) {
 		list.add(sd);
+		updateTextArea();
 	}
-	
-	public void updateTextArea(ArrayList<ScheduleData> list){
-		String groupName = "<그룹명>"+list.get(index)+"\n";
-		String groupDate = "<날짜>"+list.get(index).getDate()+"\n";
+
+	public void updateTextArea() {
+		if (list.isEmpty())
+			return;
+		textArea.setText("");
+		String groupName = "<그룹명>" + list.get(index) + "\n";
+		String groupDate = "<날짜>" + list.get(index).getDate() + "\n";
 		String groupMember = "<멤버>";
 		for (String mn : list.get(index).getMemberNameL()) {
-			groupMember += mn+" ";
+			groupMember += mn + " ";
 		}
 		textArea.append(groupName);
 		textArea.append(groupDate);
@@ -103,27 +103,30 @@ public class GroupManagePanel extends JPanel implements ActionListener {
 		if (e.getSource() == backToMainBtn) {
 			MainFrame.getInstance().switchingPanel(MainFrame.MAIN);
 		}
-		if (e.getSource() == leftBtn){
+		if (list.size() == 0) {
+			return;
+		}
+		if (e.getSource() == leftBtn) {
 			if (index > 0) {
 				index--;
-				updateTextArea(list);
-			}else{
+				updateTextArea();
+			} else {
 				JOptionPane.showMessageDialog(null, "첫번째 알림입니다.");
 			}
 		}
-		if (e.getSource() == rightBtn){
-			if (index <list.size()) {
+		if (e.getSource() == rightBtn) {
+			if (index < list.size()-1) {
 				index++;
-				updateTextArea(list);
-			}else{
+				updateTextArea();
+			} else {
 				JOptionPane.showMessageDialog(null, "마지막 알림입니다.");
 			}
 		}
-		if (e.getSource() == oBtn){
+		if (e.getSource() == oBtn) {
 			MainFrame.getInstance().sendRequest(new ScheduleData(ScheduleData.AGREE, true, list.get(index).getGrno()));
 			list.remove(index);
 		}
-		if (e.getSource() == xBtn){
+		if (e.getSource() == xBtn) {
 			MainFrame.getInstance().sendRequest(new ScheduleData(ScheduleData.AGREE, false, list.get(index).getGrno()));
 			list.remove(index);
 		}

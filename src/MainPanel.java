@@ -49,7 +49,12 @@ public class MainPanel extends JPanel implements ActionListener {
 		centerPanel.addPersnalSchedule(sd);
 	}
 
+	public void addGroupSchedule(ScheduleData sd) {
+		centerPanel.addGroupSchedule(sd);
+	}
+
 	public void updateCalendar() {
 		centerPanel.updateCalendar();
 	}
+
 }

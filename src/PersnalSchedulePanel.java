@@ -37,12 +37,12 @@ public class PersnalSchedulePanel extends JPanel implements ActionListener {
 		add(lblNewLabel_2);
 
 		tfTitle = new JTextField();
-		tfTitle.setBounds(104, 104, 209, 21);
+		tfTitle.setBounds(104, 52, 209, 21);
 		add(tfTitle);
 		tfTitle.setColumns(10);
 
 		tfPlace = new JTextField();
-		tfPlace.setBounds(104, 55, 209, 21);
+		tfPlace.setBounds(104, 101, 209, 21);
 		add(tfPlace);
 		tfPlace.setColumns(10);
 
@@ -71,10 +71,14 @@ public class PersnalSchedulePanel extends JPanel implements ActionListener {
 			} else if (sd.getState() == -1) {
 				MainFrame.getInstance().sendRequest(new ScheduleData(ScheduleData.PERSNAL_SCHEDULE_ADD,
 						tfTitle.getText(), tfPlace.getText(), sd.getDate()));
+				MainFrame.getInstance().updateCalendar();
+				MainFrame.getInstance().getInitialData();
 				frame.dispose();
 			} else {
 				MainFrame.getInstance().sendRequest(new ScheduleData(ScheduleData.PERSNAL_SCHEDULE_UPDATE,
 						tfTitle.getText(), tfPlace.getText(), sd.getDate()));
+				MainFrame.getInstance().updateCalendar();
+				MainFrame.getInstance().getInitialData();
 				frame.dispose();
 			}
 		}

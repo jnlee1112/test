@@ -110,20 +110,8 @@ public class CreateNewGroupPanel extends JPanel implements ActionListener {
 			MainFrame.getInstance()
 					.sendRequest(new ScheduleData(ScheduleData.CREATE_NEW_GROUP, groupN, place, mnoList));
 
-			// 초기화
-			memberIDtf.setText("");
-			groupNtf.setText("");
-			placetf.setText("");
-			idList = new ArrayList<>();
-			addedList.setListData(idList.toArray());
-
 		} else if (arg0.getSource() == cancelBtn) { // 이전 화면
-			memberIDtf.setText("");
-			groupNtf.setText("");
-			placetf.setText("");
-			idList = new ArrayList<>();
-			addedList.setListData(idList.toArray());
-
+			clearField();
 			MainFrame.getInstance().switchingPanel(MainFrame.GROUPMANAGE);
 		}
 	}
@@ -131,6 +119,14 @@ public class CreateNewGroupPanel extends JPanel implements ActionListener {
 	public void addToList(String memberID, int mno) {
 		idList.add(memberID);
 		mnoList.add(mno);
+		addedList.setListData(idList.toArray());
+	}
+
+	public void clearField() {
+		memberIDtf.setText("");
+		groupNtf.setText("");
+		placetf.setText("");
+		idList = new ArrayList<>();
 		addedList.setListData(idList.toArray());
 	}
 

@@ -81,7 +81,7 @@ public class MainFrame extends JFrame implements Runnable {
 
 	private void connect() { // 서버 연결
 		try {
-			socket = new Socket("localhost", 8888);//203.233.196.93
+			socket = new Socket("localhost", 8888);// 203.233.196.93
 			oos = new ObjectOutputStream(socket.getOutputStream());
 			ois = new ObjectInputStream(socket.getInputStream());
 			new Thread(this).start();
@@ -180,14 +180,23 @@ public class MainFrame extends JFrame implements Runnable {
 					switch (sd.getState()) {
 					case ScheduleData.GET_PERSONAL_SCHEDULE:
 						mainPane.addPersnalSchedule(sd);
+						mySchedulePanel.addPersnalSchedule(sd.getDate());
+						break;
+					case ScheduleData.GET_GROUP_SCHEDULE:
+						mainPane.addGroupSchedule(sd);
+						mySchedulePanel.addPersnalSchedule(sd.getDate());
+						break;
+					case ScheduleData.GET_POSSIBLE_DATE:
+						mySchedulePanel.setPossibleDate(sd.getDateList());
 						break;
 					case ScheduleData.CREATE_FAIL:
 						JOptionPane.showMessageDialog(null, "출석률이 75% 이하여서 그룹 등록 실패");
 						break;
 					case ScheduleData.CREATE_NEW_GROUP:
+						createNewGroupPanel.clearField();
 						switchingPanel(GROUPMANAGE);
 						break;
-					case ScheduleData.GROUP_MANAGE: 
+					case ScheduleData.GROUP_MANAGE:
 						groupManagePanel.updateSD(sd);
 						break;
 					}
@@ -204,6 +213,8 @@ public class MainFrame extends JFrame implements Runnable {
 	public void getInitialData() {
 		sendRequest(new ScheduleData(ScheduleData.GET_PERSONAL_SCHEDULE, null, null));
 		sendRequest(new ScheduleData(ScheduleData.GET_GROUP_SCHEDULE, null, null));
+		sendRequest(new ScheduleData(ScheduleData.GET_POSSIBLE_DATE, null, null));
+		sendRequest(new ScheduleData(ScheduleData.GROUP_MANAGE, null, null));
 	}
 
 	public void sendRequest(Object data) {
@@ -216,6 +227,7 @@ public class MainFrame extends JFrame implements Runnable {
 
 	public void updateCalendar() {
 		mainPane.updateCalendar();
+		mySchedulePanel.updateCalendar();
 	}
 
 }

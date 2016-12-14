@@ -4,6 +4,7 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -123,10 +124,13 @@ public class Server implements Runnable {
 														// 찬성해야 약속 성사.
 						System.out.println("뉴그룹등록");
 						ArrayList<Integer> memberL = new ArrayList<>();
-						memberL.add(userNo);
-
 						int possibleDates[][] = new int[15][32]; // 각 개인이 가능한
 						memberL = sd.getMemberNoList();// 날짜의 집합
+						memberL.add(userNo);
+						for (int i : memberL) {
+							System.out.println(i);
+						}
+						System.out.println();
 						for (int memberNO : memberL) {
 							try {
 								String sqlPossible = "select to_char(pdate, 'mm'), to_char(pdate,'dd') from possible1 where mno = ? and pdate > sysdate";
@@ -159,17 +163,17 @@ public class Server implements Runnable {
 								}
 							}
 						}
-						
-						if(memberL.size() == 0 || ((double)optimum/memberL.size())<0.75 ){
+
+						if (memberL.size() == 0 || ((double) optimum / memberL.size()) < 0.75) {
 							sendResponse(new ScheduleData(ScheduleData.CREATE_FAIL, null, null));
-						}else{
+						} else {
 							Calendar cal = Calendar.getInstance();
 							cal.set(Calendar.MONTH, optimumMonth - 1);
 							cal.set(Calendar.DATE, optimumDate);
 							long d = cal.getTimeInMillis();
 							java.sql.Date optimumD = new java.sql.Date(d);
 
-							String sqlG = "insert into group1 (grno,grname,gdate) values(seq_grno.nextval,?,?)";
+							String sqlG = "insert into group1 (grno,gname,gdate) values(seq_grno.nextval,?,?)";
 							try {
 								PreparedStatement ps = con.prepareStatement(sqlG);
 								ps.setString(1, sd.getGrName());
@@ -190,6 +194,7 @@ public class Server implements Runnable {
 									e.printStackTrace();
 								}
 							}
+							sendResponse(new ScheduleData(ScheduleData.CREATE_NEW_GROUP, null, null));
 						}
 						break;
 					case ScheduleData.PERSNAL_SCHEDULE_ADD:
@@ -253,8 +258,7 @@ public class Server implements Runnable {
 						}
 						break;
 					case ScheduleData.GET_GROUP_SCHEDULE:
-						double count = 0; // agree count
-						double percent = 0;
+
 						ArrayList<String> idList = new ArrayList<>();
 						String sqlGS = "select * from meeting where mno = ?";
 						try {
@@ -262,27 +266,39 @@ public class Server implements Runnable {
 							ps.setInt(1, userNo);
 							ResultSet rs = ps.executeQuery();
 							while (rs.next()) {
+								double count = 0; // agree count
+								double total = 0;
 								int gNo = rs.getInt("grno");
+								System.out.println("groupNumber:" + gNo);
 								String sql1 = "select * from meeting, member1 where meeting.mno = member1.mno and meeting.grno = ?";
 								PreparedStatement ps1 = con.prepareStatement(sql1);
 								ps1.setInt(1, gNo);
 								ResultSet rs1 = ps1.executeQuery();
 								while (rs1.next()) {
-									percent++;
-									if (rs1.getString("agree").equals("YES")) {
+									total++;
+									/*
+									 * if (rs1.getString("agree") == null) {
+									 * continue; }
+									 */
+									if (rs1.getString("agree") != null && rs1.getString("agree").equals("YES")) {
 										count++;
-										idList.add(rs1.getString("ename"));
+										idList.add(rs1.getString("mname"));
 									}
 								}
 								rs1.close();
 								ps1.close();
-								if ((count / percent) >= 0.75) {
+								System.out.println("count:" + count);
+								System.out.println("total:" + total);
+								if (count == total) {
 									String sql2 = "select * from group1 where grno = ?";
 									PreparedStatement ps2 = con.prepareStatement(sql2);
+									ps2.setInt(1, gNo);
 									ResultSet rs2 = ps2.executeQuery();
 									while (rs2.next()) {
+										System.out.println("date: " + rs2.getDate("gdate"));
 										sendResponse(new ScheduleData(ScheduleData.GET_GROUP_SCHEDULE,
-												rs2.getString("gname"), rs2.getString("gplace"), idList,rs2.getDate("gdate")));
+												rs2.getString("gname"), rs2.getString("gplace"), idList,
+												rs2.getDate("gdate")));
 									}
 									rs2.close();
 									ps2.close();
@@ -297,7 +313,7 @@ public class Server implements Runnable {
 						break;
 					case ScheduleData.GROUP_MANAGE:
 						ArrayList<String> memberList = new ArrayList<>();
-						String sqlGM = "select * from meeting, member1 where mno = ?";
+						String sqlGM = "select * from meeting where mno = ?";
 						try {
 							PreparedStatement ps = con.prepareStatement(sqlGM);
 							ps.setInt(1, userNo);
@@ -313,8 +329,10 @@ public class Server implements Runnable {
 									psF.setInt(1, rsFindMN.getInt("mno"));
 									ResultSet rsF = psF.executeQuery();
 									while (rsF.next()) {
-										memberList.add(rsFindMN.getString("mname"));
+										memberList.add(rsF.getString("mname"));
 									}
+									rsF.close();
+									psF.close();
 								}
 								String sql1 = "select * from group1 where grno = ?";
 								PreparedStatement ps1 = con.prepareStatement(sql1);
@@ -324,6 +342,10 @@ public class Server implements Runnable {
 									sendResponse(new ScheduleData(ScheduleData.GROUP_MANAGE, rs1.getString("gname"),
 											rs1.getString("gplace"), memberList, rs1.getDate("gdate")));
 								}
+								rs1.close();
+								ps1.close();
+								rsFindMN.close();
+								psFindMN.close();
 							}
 						} catch (SQLException e) {
 							e.printStackTrace();
@@ -335,9 +357,10 @@ public class Server implements Runnable {
 							PreparedStatement ps = con.prepareStatement(sql);
 							ps.setInt(2, userNo);
 							ps.setInt(3, sd.getGrno());
-							if(sd.isAgree()){
-								ps.setString(1, "YES");;
-							}else{
+							if (sd.isAgree()) {
+								ps.setString(1, "YES");
+								;
+							} else {
 								ps.setString(1, "NO");
 							}
 							String sql1 = "select * from meeting, member1, group1 where group1.grno = meeting.grno and meeting.mno = member1.mno and meeting.grno = ? ";
@@ -348,12 +371,13 @@ public class Server implements Runnable {
 							String message = null;
 							String members = null;
 							while (rs.next()) {
-								members += rs.getString("mname")+" ";
+								members += rs.getString("mname") + " ";
 								subject = String.format("[ㅇㅇㅇ] 그룹 %s에 대한 결과입니다.", rs.getString("gname"));
-								message = String.format("일시: %s%n장소: %s%n인원: %s%n일정 성사되었습니다.", rs.getDate("gdate"),rs.getString("gplace"),members);
-								if(rs.getString("agree") == null){
+								message = String.format("일시: %s%n장소: %s%n인원: %s%n일정 성사되었습니다.", rs.getDate("gdate"),
+										rs.getString("gplace"), members);
+								if (rs.getString("agree") == null) {
 									return;
-								}else if(rs.getString("agree").equals("NO")){
+								} else if (rs.getString("agree").equals("NO")) {
 									String sqlD = "delete group1 where grno = ?";
 									PreparedStatement psD = con.prepareStatement(sqlD);
 									psD.setInt(1, sd.getGrno());
@@ -361,14 +385,55 @@ public class Server implements Runnable {
 									message = "참석 불가능한 인원이 있어 일정이 취소되었습니다.";
 								}
 							}
-							rs.first();
-							while(rs.next()){
+							rs.previous();
+							while (rs.next()) {
 								MailManager.sendMail(rs.getString("email"), subject, message);
 							}
 							ps.executeUpdate();
 							ps.close();
 						} catch (SQLException e) {
 							e.printStackTrace();
+						}
+						break;
+					case ScheduleData.GET_POSSIBLE_DATE:
+						ArrayList<Date> possibleDL = new ArrayList<>();
+						String sqlD = "select * from possible1 where mno = ?";
+						try {
+							PreparedStatement ps = con.prepareStatement(sqlD);
+							ps.setInt(1, userNo);
+							ResultSet rs = ps.executeQuery();
+							while (rs.next()) {
+								possibleDL.add(rs.getDate("pdate"));
+							}
+							sendResponse(new ScheduleData(ScheduleData.GET_POSSIBLE_DATE, possibleDL));
+							rs.close();
+							ps.close();
+						} catch (SQLException e) {
+							e.printStackTrace();
+						}
+						break;
+					case ScheduleData.ADD_POSSIBLE_DATE:
+						String sqlDp = "delete possible1 where mno = ?";
+						try {
+							PreparedStatement psDp = con.prepareStatement(sqlDp);
+							psDp.setInt(1, userNo);
+							psDp.executeUpdate();
+							psDp.close();
+						} catch (SQLException e1) {
+							e1.printStackTrace();
+						}
+
+						for (Date pd : sd.getDateList()) {
+							String sqlP = "insert into possible1 values(?,?)";
+							try {
+								PreparedStatement ps = con.prepareStatement(sqlP);
+								ps.setInt(1, userNo);
+								ps.setDate(2, pd);
+								ps.executeUpdate();
+								ps.close();
+							} catch (SQLException e) {
+								e.printStackTrace();
+							}
 						}
 						break;
 					}

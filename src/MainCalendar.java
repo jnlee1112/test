@@ -174,7 +174,7 @@ class MainCalendar extends JPanel implements ActionListener {
 			c.set(Calendar.DATE, count);
 			Date d = new Date(c.getTimeInMillis());
 			if (personalScheduleSet == null)
-				personalScheduleSet = new ArrayList();
+				personalScheduleSet = new ArrayList<>();
 			if (groupScheduleSet == null)
 				groupScheduleSet = new ArrayList<>();
 			for (ScheduleData sd : personalScheduleSet) {
@@ -276,5 +276,6 @@ class MainCalendar extends JPanel implements ActionListener {
 		groupScheduleSet = new ArrayList<>();
 		personalScheduleSet = new ArrayList<>();
 		repaintCalendar(0);
+		lblShceduleInfo.setText("");
 	}
 }
