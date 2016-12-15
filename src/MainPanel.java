@@ -14,6 +14,7 @@ public class MainPanel extends JPanel implements ActionListener {
 	private JButton groupManageBtn;
 	private JButton myScheduleBtn;
 	private MainCalendar centerPanel;
+	private JButton btnLogout;
 
 	public MainPanel() {
 		setSize(width, height);
@@ -33,7 +34,12 @@ public class MainPanel extends JPanel implements ActionListener {
 		southPanel.add(groupManageBtn);
 
 		add(centerPanel);
+		
+		btnLogout = new JButton("Logout");
+		btnLogout.setBounds(291, 297, 97, 23);
+		centerPanel.add(btnLogout);
 		add(southPanel, BorderLayout.SOUTH);
+		btnLogout.addActionListener(this);
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -42,6 +48,10 @@ public class MainPanel extends JPanel implements ActionListener {
 		}
 		if (e.getSource() == groupManageBtn) { // 그룹 관리 버튼
 			MainFrame.getInstance().switchingPanel(MainFrame.GROUPMANAGE);
+		}
+		if (e.getSource() == btnLogout){ //로그 아웃 버튼
+			//MainFrame.getInstance().sendRequest(new MemberData(MemberData.DISCONNECT, null, null));
+			MainFrame.getInstance().switchingPanel(MainFrame.LOGIN);
 		}
 	}
 
@@ -56,5 +66,4 @@ public class MainPanel extends JPanel implements ActionListener {
 	public void updateCalendar() {
 		centerPanel.updateCalendar();
 	}
-
 }

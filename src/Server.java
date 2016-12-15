@@ -240,6 +240,7 @@ public class Server implements Runnable {
 						}
 						break;
 					case ScheduleData.GET_PERSONAL_SCHEDULE:
+						ArrayList<ScheduleData> personalS = new ArrayList<>();
 						String sqlPS = "select sdate,title,splace from schedule1 where mno = ?";
 						try {
 							PreparedStatement ps = con.prepareStatement(sqlPS);
@@ -248,9 +249,9 @@ public class Server implements Runnable {
 							while (rs.next()) {
 								System.out.println(rs.getString(1) + "<-sdate" + rs.getString(2) + "<-title"
 										+ rs.getString(3) + "<-splace");
-								sendResponse(new ScheduleData(ScheduleData.GET_PERSONAL_SCHEDULE, rs.getString("title"),
-										rs.getString("splace"), rs.getDate("sdate")));
+								personalS.add(new ScheduleData(0, rs.getString("title"), rs.getString("splace"), rs.getDate("sdate")));
 							}
+							sendResponse(new ScheduleData(ScheduleData.GET_PERSONAL_SCHEDULE,personalS));
 							rs.close();
 							ps.close();
 						} catch (SQLException e) {
@@ -258,8 +259,8 @@ public class Server implements Runnable {
 						}
 						break;
 					case ScheduleData.GET_GROUP_SCHEDULE:
-
-						ArrayList<String> idList = new ArrayList<>();
+						ArrayList<ScheduleData> groupS = new ArrayList<>();
+						ArrayList<String> mnameList = new ArrayList<>();
 						String sqlGS = "select * from meeting where mno = ?";
 						try {
 							PreparedStatement ps = con.prepareStatement(sqlGS);
@@ -276,13 +277,9 @@ public class Server implements Runnable {
 								ResultSet rs1 = ps1.executeQuery();
 								while (rs1.next()) {
 									total++;
-									/*
-									 * if (rs1.getString("agree") == null) {
-									 * continue; }
-									 */
 									if (rs1.getString("agree") != null && rs1.getString("agree").equals("YES")) {
 										count++;
-										idList.add(rs1.getString("mname"));
+										mnameList.add(rs1.getString("mname"));
 									}
 								}
 								rs1.close();
@@ -296,15 +293,14 @@ public class Server implements Runnable {
 									ResultSet rs2 = ps2.executeQuery();
 									while (rs2.next()) {
 										System.out.println("date: " + rs2.getDate("gdate"));
-										sendResponse(new ScheduleData(ScheduleData.GET_GROUP_SCHEDULE,
-												rs2.getString("gname"), rs2.getString("gplace"), idList,
-												rs2.getDate("gdate")));
+										groupS.add(new ScheduleData(0, rs2.getString("gname"), rs2.getString("gplace"), mnameList, rs2.getDate("gdate")));
 									}
 									rs2.close();
 									ps2.close();
 								}
 
 							}
+							sendResponse(new ScheduleData(ScheduleData.GET_GROUP_SCHEDULE, groupS));
 							rs.close();
 							ps.close();
 						} catch (SQLException e) {
@@ -312,6 +308,7 @@ public class Server implements Runnable {
 						}
 						break;
 					case ScheduleData.GROUP_MANAGE:
+						ArrayList<ScheduleData> notFixedL = new ArrayList<>();
 						ArrayList<String> memberList = new ArrayList<>();
 						String sqlGM = "select * from meeting where mno = ?";
 						try {
@@ -339,9 +336,9 @@ public class Server implements Runnable {
 								ps1.setInt(1, rs.getInt("grno"));
 								ResultSet rs1 = ps1.executeQuery();
 								while (rs1.next()) {
-									sendResponse(new ScheduleData(ScheduleData.GROUP_MANAGE, rs1.getString("gname"),
-											rs1.getString("gplace"), memberList, rs1.getDate("gdate")));
+									notFixedL.add(new ScheduleData(0, rs1.getString("gname"), rs1.getString("gplace"), memberList, rs1.getDate("gdate")));
 								}
+								sendResponse(new ScheduleData(ScheduleData.GROUP_MANAGE,notFixedL));
 								rs1.close();
 								ps1.close();
 								rsFindMN.close();
@@ -396,14 +393,14 @@ public class Server implements Runnable {
 						}
 						break;
 					case ScheduleData.GET_POSSIBLE_DATE:
-						ArrayList<Date> possibleDL = new ArrayList<>();
+						ArrayList<ScheduleData> possibleDL = new ArrayList<>();
 						String sqlD = "select * from possible1 where mno = ?";
 						try {
 							PreparedStatement ps = con.prepareStatement(sqlD);
 							ps.setInt(1, userNo);
 							ResultSet rs = ps.executeQuery();
 							while (rs.next()) {
-								possibleDL.add(rs.getDate("pdate"));
+								possibleDL.add(new ScheduleData(0, null, null, rs.getDate("pdate")));
 							}
 							sendResponse(new ScheduleData(ScheduleData.GET_POSSIBLE_DATE, possibleDL));
 							rs.close();
@@ -423,7 +420,8 @@ public class Server implements Runnable {
 							e1.printStackTrace();
 						}
 
-						for (Date pd : sd.getDateList()) {
+						for (ScheduleData s : sd.getScheduleList()) {
+							Date pd = s.getDate();
 							String sqlP = "insert into possible1 values(?,?)";
 							try {
 								PreparedStatement ps = con.prepareStatement(sqlP);

@@ -1,4 +1,5 @@
 import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -48,7 +49,6 @@ public class LogInPanel extends JPanel implements ActionListener {
 		JLabel lblLogInTheme = new JLabel(ii);
 		lblLogInTheme.setBounds(0, -11, 284, 523);
 		add(lblLogInTheme);
-
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -61,8 +61,11 @@ public class LogInPanel extends JPanel implements ActionListener {
 		}
 	}
 
-	public void clearField() {
+	public void clearPWField() {
 		tfPW.setText("");
 	}
-
+	
+	public void clearIDField(){
+		tfID.setText("");
+	}
 }

@@ -118,6 +118,8 @@ public class MainFrame extends JFrame implements Runnable {
 		mySchedulePanel.setVisible(false);
 		switch (state) {
 		case LOGIN:
+			logInPanel.clearIDField();
+			logInPanel.clearPWField();
 			setSize(logInPanel.getWidth(), logInPanel.getHeight());
 			logInPanel.setVisible(true);
 			break;
@@ -158,14 +160,15 @@ public class MainFrame extends JFrame implements Runnable {
 						break;
 					case MemberData.PW_MISSMATCH:
 						JOptionPane.showMessageDialog(null, "잘못된 비밀번호 입니다.");
-						logInPanel.clearField();
+						logInPanel.clearPWField();
 						break;
 					case MemberData.ID_FOUND:
 						createNewGroupPanel.addToList(md.getID(), md.getMemberNo());
 						break;
 					case MemberData.ID_NOTFOUND:
 						JOptionPane.showMessageDialog(null, "존재하지 않는 아이디 입니다.");
-						logInPanel.clearField();
+						logInPanel.clearIDField();
+						logInPanel.clearPWField();
 						break;
 					case MemberData.REGISTER_SUCCESS:
 						regisetPanel.clearField();

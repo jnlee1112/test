@@ -29,10 +29,15 @@ public class ScheduleData implements Serializable {
 	private String place;
 	private ArrayList<Integer> memberNoList;
 	private ArrayList<String> memberNameL;
-	private ArrayList<Date> dateList;
+	private ArrayList<ScheduleData> scheduleList;
 	private Date date;
 	private String title;
 	private boolean agree;
+	
+	public ScheduleData(int state, ArrayList<ScheduleData> scheduleList){
+		this.state = state;
+		this.setScheduleList(scheduleList);
+	}
 
 	public ScheduleData(int state, String grName, String place, ArrayList<Integer> memberList) {
 		this.state = state;
@@ -76,9 +81,8 @@ public class ScheduleData implements Serializable {
 		this.grno = grno;
 	}
 
-	public ScheduleData(int state, ArrayList<Date> dateList) {
+	public ScheduleData(int state) {
 		this.state = state;
-		this.dateList = dateList;
 	}
 
 	public int getState() {
@@ -111,14 +115,6 @@ public class ScheduleData implements Serializable {
 
 	public void setMemberNoList(ArrayList<Integer> memberList) {
 		this.memberNoList = memberList;
-	}
-
-	public ArrayList<Date> getDateList() {
-		return dateList;
-	}
-
-	public void setDateList(ArrayList<Date> dateList) {
-		this.dateList = dateList;
 	}
 
 	public Date getDate() {
@@ -159,6 +155,14 @@ public class ScheduleData implements Serializable {
 
 	public void setGrno(int grno) {
 		this.grno = grno;
+	}
+
+	public ArrayList<ScheduleData> getScheduleList() {
+		return scheduleList;
+	}
+
+	public void setScheduleList(ArrayList<ScheduleData> scheduleList) {
+		this.scheduleList = scheduleList;
 	}
 
 }

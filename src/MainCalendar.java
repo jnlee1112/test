@@ -104,6 +104,7 @@ class MainCalendar extends JPanel implements ActionListener {
 				for (ScheduleData sd : groupScheduleSet) {
 					if (sd.getDate().toString().equals(d.toString())) {
 						JOptionPane.showMessageDialog(null, "넌 못지나간다.");
+						return;
 					}
 				}
 				for (ScheduleData sd : personalScheduleSet) {
