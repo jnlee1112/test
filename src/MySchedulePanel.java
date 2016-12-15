@@ -51,16 +51,7 @@ public class MySchedulePanel extends JPanel implements ActionListener {
 		}
 	}
 
-	public void setPossibleDate(ArrayList<Date> dateList) {
-		centerPanel.setPossibleDate(dateList);
-		centerPanel.repaintCalendar(0);
-	}
-
-	public void addPersnalSchedule(Date date) {
-		centerPanel.addPersnalSchedule(date);
-	}
-
-	public void updateCalendar() {
+	public void updateGUI() {
 		centerPanel.updateCalendar();
 	}
 }

@@ -14,9 +14,6 @@ import javax.swing.JTextField;
 
 class PossibleCalendar extends JPanel implements ActionListener {
 
-	private ArrayList<Date> possibleDateList;
-	private ArrayList<Date> imPossibleDateList;
-
 	private String[] days = { "일", "월", "화", "수", "목", "금", "토" };
 	private int year, month, day, todays;
 	private Font f;
@@ -29,7 +26,10 @@ class PossibleCalendar extends JPanel implements ActionListener {
 	private JPanel panCenter;
 	private JTextField txtMonth, txtYear;
 
+	private ArrayList<ScheduleData> possibleDateList;
+
 	public PossibleCalendar() {
+		possibleDateList = new ArrayList<>();
 		today = Calendar.getInstance();
 		cal = new GregorianCalendar();
 		year = today.get(Calendar.YEAR);
@@ -64,13 +64,13 @@ class PossibleCalendar extends JPanel implements ActionListener {
 		calSet();
 		hideInit();
 		add(panCenter);
+
 		setButton();
 
 		btnLastMonth.addActionListener(this);
 		btnLastYear.addActionListener(this);
 		btnNextMonth.addActionListener(this);
 		btnNextYear.addActionListener(this);
-
 	}
 
 	public void setButton() {
@@ -84,19 +84,17 @@ class PossibleCalendar extends JPanel implements ActionListener {
 				continue;
 			c.set(Calendar.DATE, count);
 			Date d = new Date(c.getTimeInMillis());
-			if (imPossibleDateList == null)
-				imPossibleDateList = new ArrayList<>();
-			for (Date date : imPossibleDateList) {
-				if (date.toString().equals(d.toString())) {
-					calBtn[i].setBackground(new Color(128, 255, 128));// 연두
-					count++;
-					continue loop_continue;
-				}
+			if (MainFrame.getInstance().findPersonalScheduleData(d) != null) {
+				calBtn[i].setBackground(new Color(255, 255, 128));// 노랑
+				count++;
+				continue loop_continue;
+			} else if (MainFrame.getInstance().findGroupScheduleData(d) != null) {
+				calBtn[i].setBackground(new Color(128, 255, 128));// 연두
+				count++;
+				continue loop_continue;
 			}
-			if (possibleDateList == null)
-				possibleDateList = new ArrayList<>();
-			for (Date date : possibleDateList) {
-				if (date.toString().equals(d.toString())) {
+			for (ScheduleData sd : possibleDateList) {
+				if (sd.getDate().toString().equals(d.toString())) {
 					calBtn[i].setBackground(new Color(128, 255, 255));// 하늘색
 					break;
 				}
@@ -104,6 +102,7 @@ class PossibleCalendar extends JPanel implements ActionListener {
 			calBtn[i].addActionListener(this);
 			count++;
 		}
+
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -117,42 +116,26 @@ class PossibleCalendar extends JPanel implements ActionListener {
 			repaintCalendar(12);
 		} else if (Integer.parseInt(e.getActionCommand()) >= 1 && Integer.parseInt(e.getActionCommand()) <= 31) {
 			day = Integer.parseInt(e.getActionCommand());
-			calSet();
-			Calendar c = (Calendar) cal.clone();
-			c.set(Calendar.YEAR, year);
-			c.set(Calendar.MONTH, (month - 1));
-			c.set(Calendar.DATE, day);
-			Date d = new Date(c.getTimeInMillis());
+			Date d = getClickDate();
 			JButton pushed = null;
-			for (JButton jButton : calBtn) {
-				if (jButton.getText().equals(e.getActionCommand())) {
+			for (JButton jButton : calBtn)
+				if (jButton.getText().equals(e.getActionCommand()))
 					pushed = jButton;
-				}
-			}
-			for (Date date : possibleDateList) {
-				if (date.toString().equals(d.toString())) {
+
+			for (ScheduleData sd : possibleDateList) {
+				if (sd.getDate().toString().equals(d.toString())) {
 					pushed.setBackground(null); // 색 지우기
-					possibleDateList.remove(date);
+					possibleDateList.remove(sd);
 					return;
 				}
 			}
 
 			pushed.setBackground(new Color(128, 255, 255)); // 하늘 색
-			possibleDateList.add(d);
+			ScheduleData sd = new ScheduleData(-1);
+			sd.setDate(d);
+			possibleDateList.add(sd);
 		}
 	}
-
-	/*
-	 * public void calSetColor() { // 일정 색칠하기 Calendar c = (Calendar)
-	 * cal.clone(); c.set(Calendar.YEAR, year); c.set(Calendar.MONTH, (month -
-	 * 1)); int count = 1; for (int i = 7; i < calBtn.length; i++) { if
-	 * ((calBtn[i].getText()).equals("")) continue; c.set(Calendar.DATE, count);
-	 * Date d = new Date(c.getTimeInMillis()); if (possibleDateList == null)
-	 * possibleDateList = new ArrayList<>(); if (imPossibleDateList == null)
-	 * imPossibleDateList = new ArrayList<>(); for (Date date :
-	 * possibleDateList) { if (date.toString().equals(d.toString())) {
-	 * calBtn[i].setBackground(new Color(255, 0, 0)); // 빨간색 } } count++; } }
-	 */
 
 	public void calSet() {
 		cal.set(Calendar.YEAR, year);
@@ -237,20 +220,20 @@ class PossibleCalendar extends JPanel implements ActionListener {
 		}
 	}
 
-	public void setPossibleDate(ArrayList<Date> dateList) {
-		this.possibleDateList = dateList;
-	}
-
-	public void addPersnalSchedule(Date date) {
-		imPossibleDateList.add(date);
-		repaintCalendar(0);
-	}
-
-	public ArrayList<Date> getDateList() {
-		return possibleDateList;
+	private Date getClickDate() {
+		Calendar c = (Calendar) cal.clone();
+		c.set(Calendar.YEAR, year);
+		c.set(Calendar.MONTH, (month - 1));
+		c.set(Calendar.DATE, day);
+		return new Date(c.getTimeInMillis());
 	}
 
 	public void updateCalendar() {
-		
+		possibleDateList = MainFrame.getInstance().getPossibleDateList();
+		repaintCalendar(0);
+	}
+
+	public ArrayList<ScheduleData> getDateList() {
+		return possibleDateList;
 	}
 }

@@ -44,6 +44,7 @@ public class MainPanel extends JPanel implements ActionListener {
 
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == myScheduleBtn) { // 내 일정 설정 버튼
+			MainFrame.getInstance().getInitialData();
 			MainFrame.getInstance().switchingPanel(MainFrame.MYSCHEDULE);
 		}
 		if (e.getSource() == groupManageBtn) { // 그룹 관리 버튼
@@ -55,15 +56,7 @@ public class MainPanel extends JPanel implements ActionListener {
 		}
 	}
 
-	public void addPersnalSchedule(ScheduleData sd) {
-		centerPanel.addPersnalSchedule(sd);
-	}
-
-	public void addGroupSchedule(ScheduleData sd) {
-		centerPanel.addGroupSchedule(sd);
-	}
-
-	public void updateCalendar() {
+	public void updateGUI() {
 		centerPanel.updateCalendar();
 	}
 }

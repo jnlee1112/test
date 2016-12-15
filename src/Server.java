@@ -249,9 +249,10 @@ public class Server implements Runnable {
 							while (rs.next()) {
 								System.out.println(rs.getString(1) + "<-sdate" + rs.getString(2) + "<-title"
 										+ rs.getString(3) + "<-splace");
-								personalS.add(new ScheduleData(0, rs.getString("title"), rs.getString("splace"), rs.getDate("sdate")));
+								personalS.add(new ScheduleData(0, rs.getString("title"), rs.getString("splace"),
+										rs.getDate("sdate")));
 							}
-							sendResponse(new ScheduleData(ScheduleData.GET_PERSONAL_SCHEDULE,personalS));
+							sendResponse(new ScheduleData(ScheduleData.GET_PERSONAL_SCHEDULE, personalS));
 							rs.close();
 							ps.close();
 						} catch (SQLException e) {
@@ -293,7 +294,8 @@ public class Server implements Runnable {
 									ResultSet rs2 = ps2.executeQuery();
 									while (rs2.next()) {
 										System.out.println("date: " + rs2.getDate("gdate"));
-										groupS.add(new ScheduleData(0, rs2.getString("gname"), rs2.getString("gplace"), mnameList, rs2.getDate("gdate")));
+										groupS.add(new ScheduleData(0, rs2.getString("gname"), rs2.getString("gplace"),
+												mnameList, rs2.getDate("gdate")));
 									}
 									rs2.close();
 									ps2.close();
@@ -336,9 +338,10 @@ public class Server implements Runnable {
 								ps1.setInt(1, rs.getInt("grno"));
 								ResultSet rs1 = ps1.executeQuery();
 								while (rs1.next()) {
-									notFixedL.add(new ScheduleData(0, rs1.getString("gname"), rs1.getString("gplace"), memberList, rs1.getDate("gdate")));
+									notFixedL.add(new ScheduleData(0, rs1.getString("gname"), rs1.getString("gplace"),
+											memberList, rs1.getDate("gdate")));
 								}
-								sendResponse(new ScheduleData(ScheduleData.GROUP_MANAGE,notFixedL));
+								sendResponse(new ScheduleData(ScheduleData.GROUP_MANAGE, notFixedL));
 								rs1.close();
 								ps1.close();
 								rsFindMN.close();
@@ -363,7 +366,7 @@ public class Server implements Runnable {
 								ps.setInt(3, sd.getGrno());
 								ps.executeUpdate();
 								ps.close();
-								
+
 								PreparedStatement ps1 = con.prepareStatement(sql1);
 								ps1.setInt(1, sd.getGrno());
 								ResultSet rs = ps1.executeQuery();
@@ -374,14 +377,14 @@ public class Server implements Runnable {
 											rs.getString("gplace"), members);
 									if (rs.getString("agree") == null) {
 										return;
-									} 
+									}
 								}
 								rs.close();
 								ps1.close();
-								
+
 								PreparedStatement ps2 = con.prepareStatement(sql1);
 								ResultSet rs2 = ps2.executeQuery();
-								while(rs2.next()){
+								while (rs2.next()) {
 									MailManager.sendMail(rs.getString("email"), subject, message);
 								}
 								rs2.close();
@@ -389,8 +392,8 @@ public class Server implements Runnable {
 							} catch (SQLException e) {
 								e.printStackTrace();
 							}
-							
-						}else{
+
+						} else {
 							try {
 								PreparedStatement ps1 = con.prepareStatement(sql1);
 								ps1.setInt(1, sd.getGrno());
@@ -398,26 +401,26 @@ public class Server implements Runnable {
 								while (rs.next()) {
 									members += rs.getString("mname") + " ";
 									subject = String.format("[ㅇㅇㅇ] 그룹 %s에 대한 결과입니다.", rs.getString("gname"));
-									message = String.format("참석 불가능한 인원이 있어 일정이 취소되었습니다.%n일시: %s%n장소: %s%n인원: %s%n", rs.getDate("gdate"),
-											rs.getString("gplace"), members);
+									message = String.format("참석 불가능한 인원이 있어 일정이 취소되었습니다.%n일시: %s%n장소: %s%n인원: %s%n",
+											rs.getDate("gdate"), rs.getString("gplace"), members);
 								}
 								rs.close();
 								ps1.close();
-								
+
 								String sqlDM = "delete group1 where grno = ?";
 								PreparedStatement psDM = con.prepareStatement(sqlDM);
 								psDM.setInt(1, sd.getGrno());
 								psDM.executeUpdate();
 								psDM.close();
-								
+
 								PreparedStatement ps2 = con.prepareStatement(sql1);
 								ResultSet rs2 = ps2.executeQuery();
-								while(rs2.next()){
+								while (rs2.next()) {
 									MailManager.sendMail(rs.getString("email"), subject, message);
 								}
 								rs2.close();
 								ps2.close();
-							
+
 							} catch (SQLException e) {
 								e.printStackTrace();
 							}

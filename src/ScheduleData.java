@@ -33,10 +33,10 @@ public class ScheduleData implements Serializable {
 	private Date date;
 	private String title;
 	private boolean agree;
-	
-	public ScheduleData(int state, ArrayList<ScheduleData> scheduleList){
+
+	public ScheduleData(int state, ArrayList<ScheduleData> scheduleList) {
 		this.state = state;
-		this.setScheduleList(scheduleList);
+		this.scheduleList = scheduleList;
 	}
 
 	public ScheduleData(int state, String grName, String place, ArrayList<Integer> memberList) {
@@ -159,10 +159,6 @@ public class ScheduleData implements Serializable {
 
 	public ArrayList<ScheduleData> getScheduleList() {
 		return scheduleList;
-	}
-
-	public void setScheduleList(ArrayList<ScheduleData> scheduleList) {
-		this.scheduleList = scheduleList;
 	}
 
 }

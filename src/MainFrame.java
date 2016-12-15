@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.sql.Date;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
@@ -21,6 +22,11 @@ public class MainFrame extends JFrame implements Runnable {
 	public static final int MYSCHEDULE = 5;
 
 	private static MainFrame mf = new MainFrame();
+
+	private ArrayList<ScheduleData> personalList;
+	private ArrayList<ScheduleData> groupList;
+	private ArrayList<ScheduleData> possibleDateList;
+	private ArrayList<ScheduleData> notFixedList;
 
 	private LogInPanel logInPanel;
 	private MainPanel mainPane;
@@ -94,19 +100,28 @@ public class MainFrame extends JFrame implements Runnable {
 		}
 	}
 
-	private void initialize() { // 각 화면 등록
+	private void initialize() { // 프로그램 초기화
+		personalList = new ArrayList<>();
+		groupList = new ArrayList<>();
+		possibleDateList = new ArrayList<>();
+		notFixedList = new ArrayList<>();
+		// 사용할 자료구조 정의
+
 		logInPanel = new LogInPanel();
 		mainPane = new MainPanel();
 		createNewGroupPanel = new CreateNewGroupPanel();
 		groupManagePanel = new GroupManagePanel();
 		mySchedulePanel = new MySchedulePanel();
 		regisetPanel = new RegisetPanel();
+		// 화면 구성
+
 		add(logInPanel);
 		add(regisetPanel);
 		add(mainPane);
 		add(groupManagePanel);
 		add(createNewGroupPanel);
 		add(mySchedulePanel);
+		// 프레임에 화면 달기
 	}
 
 	public void switchingPanel(int state) { // 화면 전환 함수
@@ -182,25 +197,28 @@ public class MainFrame extends JFrame implements Runnable {
 					ScheduleData sd = (ScheduleData) data;
 					switch (sd.getState()) {
 					case ScheduleData.GET_PERSONAL_SCHEDULE:
-						mainPane.addPersnalSchedule(sd);
-						mySchedulePanel.addPersnalSchedule(sd.getDate());
+						personalList = sd.getScheduleList();
+						mainPane.updateGUI();
 						break;
 					case ScheduleData.GET_GROUP_SCHEDULE:
-						mainPane.addGroupSchedule(sd);
-						mySchedulePanel.addPersnalSchedule(sd.getDate());
+						groupList = sd.getScheduleList();
+						mySchedulePanel.updateGUI();
+						mainPane.updateGUI();
 						break;
 					case ScheduleData.GET_POSSIBLE_DATE:
-						mySchedulePanel.setPossibleDate(sd.getDateList());
+						possibleDateList = sd.getScheduleList();
+						mySchedulePanel.updateGUI();
 						break;
-					case ScheduleData.CREATE_FAIL:
-						JOptionPane.showMessageDialog(null, "출석률이 75% 이하여서 그룹 등록 실패");
+					case ScheduleData.GROUP_MANAGE:
+						notFixedList = sd.getScheduleList();
+						groupManagePanel.updateGUI();
 						break;
 					case ScheduleData.CREATE_NEW_GROUP:
 						createNewGroupPanel.clearField();
 						switchingPanel(GROUPMANAGE);
 						break;
-					case ScheduleData.GROUP_MANAGE:
-						groupManagePanel.updateSD(sd);
+					case ScheduleData.CREATE_FAIL:
+						JOptionPane.showMessageDialog(null, "출석률이 75% 이하여서 그룹 등록 실패");
 						break;
 					}
 				}
@@ -213,13 +231,6 @@ public class MainFrame extends JFrame implements Runnable {
 		}
 	}
 
-	public void getInitialData() {
-		sendRequest(new ScheduleData(ScheduleData.GET_PERSONAL_SCHEDULE, null, null));
-		sendRequest(new ScheduleData(ScheduleData.GET_GROUP_SCHEDULE, null, null));
-		sendRequest(new ScheduleData(ScheduleData.GET_POSSIBLE_DATE, null, null));
-		sendRequest(new ScheduleData(ScheduleData.GROUP_MANAGE, null, null));
-	}
-
 	public void sendRequest(Object data) {
 		try {
 			oos.writeObject(data);
@@ -228,9 +239,40 @@ public class MainFrame extends JFrame implements Runnable {
 		}
 	}
 
-	public void updateCalendar() {
-		mainPane.updateCalendar();
-		mySchedulePanel.updateCalendar();
+	public void getInitialData() {
+		sendRequest(new ScheduleData(ScheduleData.GET_PERSONAL_SCHEDULE));
+		sendRequest(new ScheduleData(ScheduleData.GET_GROUP_SCHEDULE, null, null));
+		sendRequest(new ScheduleData(ScheduleData.GET_POSSIBLE_DATE, null, null));
+		sendRequest(new ScheduleData(ScheduleData.GROUP_MANAGE, null, null));
 	}
 
+	public ArrayList<ScheduleData> getPersonalList() {
+		return personalList;
+	}
+
+	public ArrayList<ScheduleData> getGroupList() {
+		return groupList;
+	}
+
+	public ArrayList<ScheduleData> getPossibleDateList() {
+		return possibleDateList;
+	}
+
+	public ArrayList<ScheduleData> getNotFixedList() {
+		return notFixedList;
+	}
+
+	public ScheduleData findPersonalScheduleData(Date d) {
+		for (ScheduleData sd : getPersonalList())
+			if (sd.getDate().toString().equals(d.toString()))
+				return sd;
+		return null;
+	}
+
+	public ScheduleData findGroupScheduleData(Date d) {
+		for (ScheduleData sd : getGroupList())
+			if (sd.getDate().toString().equals(d.toString()))
+				return sd;
+		return null;
+	}
 }

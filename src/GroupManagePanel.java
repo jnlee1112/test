@@ -16,7 +16,9 @@ public class GroupManagePanel extends JPanel implements ActionListener {
 
 	private int width = 400;
 	private int height = 500;
-	private ArrayList<ScheduleData> list = new ArrayList<>();
+
+	private ArrayList<ScheduleData> list;
+
 	private int index;
 	private JButton createNewGroupBtn;
 	private JButton backToMainBtn;
@@ -28,6 +30,7 @@ public class GroupManagePanel extends JPanel implements ActionListener {
 	private JButton xBtn;
 
 	public GroupManagePanel() {
+		list = new ArrayList<>();
 		setSize(width, height);
 		setLayout(new BorderLayout());
 
@@ -76,11 +79,6 @@ public class GroupManagePanel extends JPanel implements ActionListener {
 		add(southPanel, BorderLayout.SOUTH);
 	}
 
-	public void updateSD(ScheduleData sd) {
-		list.add(sd);
-		updateTextArea();
-	}
-
 	public void updateTextArea() {
 		if (list.isEmpty())
 			return;
@@ -115,7 +113,7 @@ public class GroupManagePanel extends JPanel implements ActionListener {
 			}
 		}
 		if (e.getSource() == rightBtn) {
-			if (index < list.size()-1) {
+			if (index < list.size() - 1) {
 				index++;
 				updateTextArea();
 			} else {
@@ -124,11 +122,16 @@ public class GroupManagePanel extends JPanel implements ActionListener {
 		}
 		if (e.getSource() == oBtn) {
 			MainFrame.getInstance().sendRequest(new ScheduleData(ScheduleData.AGREE, true, list.get(index).getGrno()));
-			list.remove(index);
+			MainFrame.getInstance().sendRequest(new ScheduleData(ScheduleData.GROUP_MANAGE));
 		}
 		if (e.getSource() == xBtn) {
 			MainFrame.getInstance().sendRequest(new ScheduleData(ScheduleData.AGREE, false, list.get(index).getGrno()));
-			list.remove(index);
+			MainFrame.getInstance().sendRequest(new ScheduleData(ScheduleData.GROUP_MANAGE));
 		}
+	}
+
+	public void updateGUI() {
+		list = MainFrame.getInstance().getNotFixedList();
+		updateTextArea();
 	}
 }
