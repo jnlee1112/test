@@ -349,47 +349,78 @@ public class Server implements Runnable {
 						}
 						break;
 					case ScheduleData.AGREE:
-						String sql = "update meeting set agree = ? where mno = ? and grno = ?";
-						try {
-							PreparedStatement ps = con.prepareStatement(sql);
-							ps.setInt(2, userNo);
-							ps.setInt(3, sd.getGrno());
-							if (sd.isAgree()) {
+						String subject = null;
+						String message = null;
+						String members = null;
+						String sql1 = "select * from meeting, member1, group1 where group1.grno = meeting.grno and meeting.mno = member1.mno and meeting.grno = ? ";
+						if (sd.isAgree()) {
+							String sql = "update meeting set agree = ? where mno = ? and grno = ?";
+							PreparedStatement ps;
+							try {
+								ps = con.prepareStatement(sql);
 								ps.setString(1, "YES");
-								;
-							} else {
-								ps.setString(1, "NO");
-							}
-							String sql1 = "select * from meeting, member1, group1 where group1.grno = meeting.grno and meeting.mno = member1.mno and meeting.grno = ? ";
-							PreparedStatement ps1 = con.prepareStatement(sql1);
-							ps1.setInt(1, sd.getGrno());
-							ResultSet rs = ps1.executeQuery();
-							String subject = null;
-							String message = null;
-							String members = null;
-							while (rs.next()) {
-								members += rs.getString("mname") + " ";
-								subject = String.format("[ㅇㅇㅇ] 그룹 %s에 대한 결과입니다.", rs.getString("gname"));
-								message = String.format("일시: %s%n장소: %s%n인원: %s%n일정 성사되었습니다.", rs.getDate("gdate"),
-										rs.getString("gplace"), members);
-								if (rs.getString("agree") == null) {
-									return;
-								} else if (rs.getString("agree").equals("NO")) {
-									String sqlD = "delete group1 where grno = ?";
-									PreparedStatement psD = con.prepareStatement(sqlD);
-									psD.setInt(1, sd.getGrno());
-									psD.executeUpdate();
-									message = "참석 불가능한 인원이 있어 일정이 취소되었습니다.";
+								ps.setInt(2, userNo);
+								ps.setInt(3, sd.getGrno());
+								ps.executeUpdate();
+								ps.close();
+								
+								PreparedStatement ps1 = con.prepareStatement(sql1);
+								ps1.setInt(1, sd.getGrno());
+								ResultSet rs = ps1.executeQuery();
+								while (rs.next()) {
+									members += rs.getString("mname") + " ";
+									subject = String.format("[ㅇㅇㅇ] 그룹 %s에 대한 결과입니다.", rs.getString("gname"));
+									message = String.format("일시: %s%n장소: %s%n인원: %s%n일정 성사되었습니다.", rs.getDate("gdate"),
+											rs.getString("gplace"), members);
+									if (rs.getString("agree") == null) {
+										return;
+									} 
 								}
+								rs.close();
+								ps1.close();
+								
+								PreparedStatement ps2 = con.prepareStatement(sql1);
+								ResultSet rs2 = ps2.executeQuery();
+								while(rs2.next()){
+									MailManager.sendMail(rs.getString("email"), subject, message);
+								}
+								rs2.close();
+								ps2.close();
+							} catch (SQLException e) {
+								e.printStackTrace();
 							}
-							rs.previous();
-							while (rs.next()) {
-								MailManager.sendMail(rs.getString("email"), subject, message);
+							
+						}else{
+							try {
+								PreparedStatement ps1 = con.prepareStatement(sql1);
+								ps1.setInt(1, sd.getGrno());
+								ResultSet rs = ps1.executeQuery();
+								while (rs.next()) {
+									members += rs.getString("mname") + " ";
+									subject = String.format("[ㅇㅇㅇ] 그룹 %s에 대한 결과입니다.", rs.getString("gname"));
+									message = String.format("참석 불가능한 인원이 있어 일정이 취소되었습니다.%n일시: %s%n장소: %s%n인원: %s%n", rs.getDate("gdate"),
+											rs.getString("gplace"), members);
+								}
+								rs.close();
+								ps1.close();
+								
+								String sqlDM = "delete group1 where grno = ?";
+								PreparedStatement psDM = con.prepareStatement(sqlDM);
+								psDM.setInt(1, sd.getGrno());
+								psDM.executeUpdate();
+								psDM.close();
+								
+								PreparedStatement ps2 = con.prepareStatement(sql1);
+								ResultSet rs2 = ps2.executeQuery();
+								while(rs2.next()){
+									MailManager.sendMail(rs.getString("email"), subject, message);
+								}
+								rs2.close();
+								ps2.close();
+							
+							} catch (SQLException e) {
+								e.printStackTrace();
 							}
-							ps.executeUpdate();
-							ps.close();
-						} catch (SQLException e) {
-							e.printStackTrace();
 						}
 						break;
 					case ScheduleData.GET_POSSIBLE_DATE:
