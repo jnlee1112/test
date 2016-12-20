@@ -12,6 +12,8 @@ public class MemberData implements Serializable {
 	public static final int REGISTER_FAIL = 7;
 	public static final int DISCONNECT = 8;
 	public static final int FIND_ID = 9;
+	public static final int DELETE_ID = 10;
+	public static final int UPDATE_MEMBER = 11;
 
 	private int state;
 	private int memberNo;
@@ -33,14 +35,13 @@ public class MemberData implements Serializable {
 		this.PW = PW;
 		this.email = email;
 	}
-	
+
 	public MemberData(int state, int memberNo, String ID) {
 		this.state = state;
 		this.memberNo = memberNo;
 		this.ID = ID;
 	}
-	
-	
+
 	public int getMemberNo() {
 		return memberNo;
 	}

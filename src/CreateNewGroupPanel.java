@@ -1,7 +1,9 @@
-import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileWriter;
 import java.util.ArrayList;
 
 import javax.swing.JButton;
@@ -15,71 +17,109 @@ import javax.swing.SwingConstants;
 
 public class CreateNewGroupPanel extends JPanel implements ActionListener {
 
-	private int width = 400;
+	private int width = 500;
 	private int height = 500;
 
-	private JTextField groupNtf, placetf, memberIDtf;
-	private JButton addBtn, deleteBtn, createGroupBtn, cancelBtn;
+	private JTextField groupNtf, memberIDtf;
+	private JButton addBtn, deleteBtn, createGroupBtn;
 	private JList addedList;
 	private ArrayList<String> idList = new ArrayList<>();
 	private ArrayList<Integer> mnoList = new ArrayList<>();
 
 	public CreateNewGroupPanel() {
 		setSize(width, height);
-		setLayout(new BorderLayout());
+		setLayout(null);
 
 		JPanel panel = new JPanel();
-		add(panel, BorderLayout.NORTH);
-		panel.setLayout(new GridLayout(3, 1, 0, 0));
+		panel.setBounds(0, 0, 500, 100);
+		add(panel);
+		panel.setLayout(null);
 		JPanel groupPanel = new JPanel();
+		groupPanel.setBounds(0, 0, 500, 45);
+		groupPanel.setBackground(new Color(255, 225, 96));
 		JLabel groupNLabel = new JLabel("\uADF8\uB8F9\uBA85");
+		groupNLabel.setFont(new Font("HY강B", Font.PLAIN, 14));
+		groupNLabel.setBounds(129, 7, 57, 15);
 		groupNtf = new JTextField(10);
+		groupNtf.setBounds(201, 5, 116, 21);
+		groupPanel.setLayout(null);
 		groupPanel.add(groupNLabel);
 		groupPanel.add(groupNtf);
 		panel.add(groupPanel);
-		JPanel placePanel = new JPanel();
-		JLabel placeLabel = new JLabel("  \uC7A5\uC18C  ");
-		placetf = new JTextField(10);
-		placePanel.add(placeLabel);
-		placePanel.add(placetf);
-		panel.add(placePanel);
 		JPanel memberPanel = new JPanel();
-		JLabel memberIDLabel = new JLabel("                      \uBA64\uBC84ID");
+		memberPanel.setBounds(0, 42, 500, 58);
+		memberPanel.setBackground(new Color(255, 225, 96));
+		JLabel memberIDLabel = new JLabel("\uBA64\uBC84ID");
+		memberIDLabel.setFont(new Font("HY강B", Font.PLAIN, 14));
+		memberIDLabel.setBounds(130, 12, 55, 15);
 		memberIDtf = new JTextField(10);
+		memberIDtf.setBounds(198, 10, 116, 21);
+		memberPanel.setLayout(null);
 		memberPanel.add(memberIDLabel);
 		memberPanel.add(memberIDtf);
-		addBtn = new JButton("\uCD94\uAC00");
+		addBtn = new JButton("");
+		addBtn.setBounds(333, 0, 68, 34);
+
+		addBtn.setBorderPainted(false);
+		addBtn.setFocusPainted(false);
+		addBtn.setContentAreaFilled(false);
+		addBtn.setIcon(ImageTransFormer.transformImage("ProjectImageIcon/addBtn.png", 20, 20));
 		addBtn.addActionListener(this);
 		memberPanel.add(addBtn);
 		panel.add(memberPanel);
 
 		JPanel panelCenter = new JPanel();
-		add(panelCenter, BorderLayout.CENTER);
-		panelCenter.setLayout(new BorderLayout());
-		JLabel label = new JLabel("      \uCD94\uAC00\uB41C \uBA64\uBC84");
+		panelCenter.setBounds(0, 99, 500, 364);
+		add(panelCenter);
+		panelCenter.setBackground(new Color(15, 31, 46));
+		panelCenter.setLayout(null);
+		JLabel label = new JLabel("                      \uCD94\uAC00\uB41C \uBA64\uBC84");
+		label.setFont(new Font("HY강B", Font.PLAIN, 14));
+		label.setForeground(Color.WHITE);
+		label.setBounds(0, 0, 500, 40);
+		label.setBackground(new Color(247, 211, 27));
 		label.setHorizontalAlignment(SwingConstants.LEFT);
-		panelCenter.add(label, BorderLayout.NORTH);
+		panelCenter.add(label);
 		JScrollPane scroll = new JScrollPane();
+		scroll.setBorder(null);
+		scroll.setBounds(0, 39, 428, 230);
 		addedList = new JList<>();
+		addedList.setBorder(null);
+		addedList.setBackground(Color.WHITE);
 		scroll.setViewportView(addedList);
-		panelCenter.add(scroll, BorderLayout.CENTER);
+		panelCenter.add(scroll);
 		JPanel panelEast = new JPanel();
-		deleteBtn = new JButton("삭제");
+		panelEast.setBorder(null);
+		panelEast.setBounds(427, 39, 73, 230);
+		panelEast.setBackground(Color.WHITE);
+		deleteBtn = new JButton("");
+
+		deleteBtn.setBorderPainted(false);
+		deleteBtn.setFocusPainted(false);
+		deleteBtn.setContentAreaFilled(false);
+		deleteBtn.setIcon(ImageTransFormer.transformImage("ProjectImageIcon/deleteBtn.png", 40, 40));
+		deleteBtn.setBounds(12, 10, 55, 57);
 		deleteBtn.addActionListener(this);
+		panelEast.setLayout(null);
 		deleteBtn.setVerticalAlignment(SwingConstants.BOTTOM);
 		deleteBtn.setHorizontalAlignment(SwingConstants.TRAILING);
 		panelEast.add(deleteBtn);
-		panelCenter.add(panelEast, BorderLayout.EAST);
+		panelCenter.add(panelEast);
 
 		JPanel panelSouth = new JPanel();
-		createGroupBtn = new JButton("그룹 등록");
-		createGroupBtn.addActionListener(this);
-		cancelBtn = new JButton("\uC774\uC804 \uD654\uBA74");
-		cancelBtn.addActionListener(this);
+		panelSouth.setBounds(0, 270, 500, 61);
+		panelCenter.add(panelSouth);
+		panelSouth.setBackground(new Color(15, 31, 46));
+		panelSouth.setLayout(null);
+		createGroupBtn = new JButton();
+		createGroupBtn.setBounds(146, 10, 235, 43);
 		panelSouth.add(createGroupBtn);
-		panelSouth.add(cancelBtn);
-		add(panelSouth, BorderLayout.SOUTH);
+		createGroupBtn.setBorderPainted(false);
+		createGroupBtn.setFocusPainted(false);
+		createGroupBtn.setContentAreaFilled(false);
+		createGroupBtn.addActionListener(this);
 
+		createGroupBtn.setIcon(ImageTransFormer.transformImage("ProjectImageIcon/groupAdd.png", 180, 60));
 		setVisible(true);
 	}
 
@@ -89,6 +129,10 @@ public class CreateNewGroupPanel extends JPanel implements ActionListener {
 		String memberID = "";
 		if (arg0.getSource() == addBtn) { // 멤버 추가
 			memberID = memberIDtf.getText();
+			if (MainFrame.getInstance().getUserID().equals(memberID)) {
+				JOptionPane.showMessageDialog(null, "본인 입니다.");
+				return;
+			}
 			// 존재하는 아이디 인지 검사
 			for (String string : idList) {
 				if (string.equals(memberID)) {
@@ -104,15 +148,15 @@ public class CreateNewGroupPanel extends JPanel implements ActionListener {
 			mnoList.remove(index);
 			addedList.setListData(idList.toArray());
 		} else if (arg0.getSource() == createGroupBtn) {// 그룹 등록
+			if (mnoList.isEmpty()) {
+				JOptionPane.showMessageDialog(null, "추가한 그룹원이 없습니다.");
+				return;
+			}
 			// 등록 진행
 			groupN = groupNtf.getText();
-			place = placetf.getText();
 			MainFrame.getInstance()
 					.sendRequest(new ScheduleData(ScheduleData.CREATE_NEW_GROUP, groupN, place, mnoList));
-
-		} else if (arg0.getSource() == cancelBtn) { // 이전 화면
-			clearField();
-			MainFrame.getInstance().switchingPanel(MainFrame.GROUPMANAGE);
+			MainFrame.getInstance().getInitialData();
 		}
 	}
 
@@ -125,8 +169,8 @@ public class CreateNewGroupPanel extends JPanel implements ActionListener {
 	public void clearField() {
 		memberIDtf.setText("");
 		groupNtf.setText("");
-		placetf.setText("");
 		idList = new ArrayList<>();
+		mnoList = new ArrayList<>();
 		addedList.setListData(idList.toArray());
 	}
 

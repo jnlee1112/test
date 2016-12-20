@@ -11,6 +11,20 @@ import java.util.GregorianCalendar;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import java.awt.BorderLayout;
+import javax.swing.BoxLayout;
+import java.awt.CardLayout;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.RowSpec;
+import net.miginfocom.swing.MigLayout;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import java.awt.FlowLayout;
+import javax.swing.JLabel;
 
 class PossibleCalendar extends JPanel implements ActionListener {
 
@@ -22,55 +36,108 @@ class PossibleCalendar extends JPanel implements ActionListener {
 	private JButton btnLastYear, btnNextYear;
 	private JButton btnLastMonth, btnNextMonth;
 	private JButton[] calBtn = new JButton[49];
-	private JPanel panNorth;
+	private JButton cancleBtn;
+	private JButton okBtn;
 	private JPanel panCenter;
 	private JTextField txtMonth, txtYear;
-
+	private int btnSizeX = 40;
+	private int btnSizeY = 30;
 	private ArrayList<ScheduleData> possibleDateList;
+	private JLabel label;
+	private JLabel label_1;
+	private JLabel label_2;
 
 	public PossibleCalendar() {
+		setSize(500, 500);
+		setLayout(null);
 		possibleDateList = new ArrayList<>();
 		today = Calendar.getInstance();
 		cal = new GregorianCalendar();
 		year = today.get(Calendar.YEAR);
 		month = today.get(Calendar.MONTH) + 1;
-
-		panNorth = new JPanel();
-		panNorth.setBounds(20, 10, 349, 42);
-		panNorth.add(btnLastYear = new JButton(" ↓ "));
-		panNorth.add(btnLastMonth = new JButton(" ← "));
-
-		panNorth.add(txtYear = new JTextField(year + "년"));
-		panNorth.add(txtMonth = new JTextField(month + "월"));
-
-		f = new Font("Sherif", Font.BOLD, 18);
-		txtYear.setFont(f);
-		txtMonth.setFont(f);
-
-		txtYear.setEnabled(false);
-		txtMonth.setEnabled(false);
-		setLayout(null);
-
-		panNorth.add(btnNextMonth = new JButton(" → "));
-		panNorth.add(btnNextYear = new JButton(" ↑ "));
-
-		add(panNorth);
-
 		panCenter = new JPanel(new GridLayout(7, 7));
-		panCenter.setBounds(20, 72, 349, 181);
-		f = new Font("Sherif", Font.BOLD, 12);
+		panCenter.setBounds(0, 68, 500, 300);
+		f = new Font("Sherif", Font.BOLD, 18);
+
+		okBtn = new JButton();
+		okBtn.setBounds(356, 376, 60, 60);
+		okBtn.setToolTipText("개인 일정 저장");
+		okBtn.addActionListener(this);
+		cancleBtn = new JButton();
+		cancleBtn.setBounds(428, 376, 60, 60);
+		cancleBtn.addActionListener(this);
+		add(okBtn);
+		add(cancleBtn);
 
 		gridInit();
 		calSet();
 		hideInit();
 		add(panCenter);
-
 		setButton();
 
-		btnLastMonth.addActionListener(this);
+		JPanel panel = new JPanel();
+		panel.setBounds(52, 20, 396, 48);
+		add(panel);
+		panel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+
+		btnLastYear = new JButton();
+		panel.add(btnLastYear);
 		btnLastYear.addActionListener(this);
+		btnLastYear.setBorder(null);
+		btnLastMonth = new JButton();
+		btnLastMonth.setLocation(171, 9);
+		panel.add(btnLastMonth);
+		txtYear = new JTextField(year + "년");
+		panel.add(txtYear);
+		txtYear.setFont(f);
+		txtYear.setBorder(null);
+		txtYear.setEnabled(false);
+		txtYear.setBackground(null);
+		txtMonth = new JTextField(month + "월");
+		panel.add(txtMonth);
+		txtMonth.setFont(f);
+		txtMonth.setEnabled(false);
+		txtMonth.setBorder(null);
+		txtMonth.setBackground(null);
+
+		btnNextMonth = new JButton();
+		panel.add(btnNextMonth);
 		btnNextMonth.addActionListener(this);
+		btnLastMonth.addActionListener(this);
+		btnLastMonth.setBorder(null);
+		btnNextMonth.setBorder(null);
+		btnNextYear = new JButton();
+		panel.add(btnNextYear);
 		btnNextYear.addActionListener(this);
+		btnNextYear.setBorder(null);
+
+		okBtn.setIcon(ImageTransFormer.transformImage("ProjectImageIcon/saveIcon.png", 60, 60));
+		cancleBtn.setIcon(ImageTransFormer.transformImage("ProjectImageIcon/cancleIcon.png", 60, 60));
+		btnLastMonth.setIcon(ImageTransFormer.transformImage("ProjectImageIcon/leftI.png", btnSizeX, btnSizeY));
+		btnNextMonth.setIcon(ImageTransFormer.transformImage("ProjectImageIcon/rightI.png", btnSizeX, btnSizeY));
+		btnLastYear.setIcon(ImageTransFormer.transformImage("ProjectImageIcon/doubleLeftI.png", btnSizeX, btnSizeY));
+		btnNextYear.setIcon(ImageTransFormer.transformImage("ProjectImageIcon/doubleRightI.png", btnSizeX, btnSizeY));
+
+		label = new JLabel(ImageTransFormer.transformImage("ProjectImageIcon/possibleDate.png", 100, 45));
+		label.setHorizontalAlignment(SwingConstants.CENTER);
+		label.setForeground(new Color(128, 255, 255));
+		label.setFont(new Font("HY견고딕", Font.BOLD, 15));
+		label.setBounds(182, 387, 90, 40);
+		add(label);
+
+		label_1 = new JLabel(ImageTransFormer.transformImage("ProjectImageIcon/groupSchedule.png", 100, 45));
+		label_1.setHorizontalAlignment(SwingConstants.CENTER);
+		label_1.setForeground(new Color(128, 255, 128));
+		label_1.setFont(new Font("HY견고딕", Font.BOLD, 15));
+		label_1.setBounds(97, 387, 90, 40);
+		add(label_1);
+
+		label_2 = new JLabel(ImageTransFormer.transformImage("ProjectImageIcon/personalSchedule.png", 100, 45));
+		label_2.setHorizontalAlignment(SwingConstants.CENTER);
+		label_2.setForeground(new Color(255, 255, 128));
+		label_2.setFont(new Font("HY견고딕", Font.BOLD, 15));
+		label_2.setBounds(10, 387, 90, 40);
+		add(label_2);
 	}
 
 	public void setButton() {
@@ -106,7 +173,12 @@ class PossibleCalendar extends JPanel implements ActionListener {
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == btnLastMonth) {
+		if (e.getSource() == okBtn) { // 확인 버튼
+			MainFrame.getInstance().sendRequest(new ScheduleData(ScheduleData.ADD_POSSIBLE_DATE, possibleDateList));
+			MainFrame.getInstance().getInitialData();
+		} else if (e.getSource() == cancleBtn) { // 취소 버튼
+			MainFrame.getInstance().getInitialData();
+		} else if (e.getSource() == btnLastMonth) {
 			repaintCalendar(-1);
 		} else if (e.getSource() == btnNextMonth) {
 			repaintCalendar(1);
@@ -186,6 +258,10 @@ class PossibleCalendar extends JPanel implements ActionListener {
 
 	public void hideInit() { // 사용하지 않는 버튼 지우기
 		for (int i = 0; i < calBtn.length; i++) {
+			calBtn[i].setBorder(null);
+			calBtn[i].setFont(f);
+			if (i < 7)
+				calBtn[i].setBackground(new Color(187, 198, 204));
 			if ((calBtn[i].getText()).equals(""))
 				calBtn[i].setEnabled(false);
 		}
@@ -233,7 +309,4 @@ class PossibleCalendar extends JPanel implements ActionListener {
 		repaintCalendar(0);
 	}
 
-	public ArrayList<ScheduleData> getDateList() {
-		return possibleDateList;
-	}
 }

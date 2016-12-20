@@ -1,8 +1,8 @@
 
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.Date;
-import java.util.Calendar;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -15,7 +15,7 @@ public class PersnalSchedulePanel extends JPanel implements ActionListener {
 
 	private ScheduleData sd;
 	private int width = 350;
-	private int height = 300;
+	private int height = 250;
 	private JButton btnDelete;
 	private JTextField tfTitle;
 	private JTextField tfPlace;
@@ -27,13 +27,16 @@ public class PersnalSchedulePanel extends JPanel implements ActionListener {
 		this.frame = frame;
 		setSize(width, height);
 		setLayout(null);
+		setBackground(new Color(255, 225, 96));
 
 		JLabel lblNewLabel_1 = new JLabel("\uC7A5\uC18C");
-		lblNewLabel_1.setBounds(53, 104, 57, 15);
+		lblNewLabel_1.setFont(new Font("HY°­B", Font.PLAIN, 14));
+		lblNewLabel_1.setBounds(53, 101, 57, 18);
 		add(lblNewLabel_1);
 
 		JLabel lblNewLabel_2 = new JLabel("\uC81C\uBAA9");
-		lblNewLabel_2.setBounds(53, 55, 57, 15);
+		lblNewLabel_2.setFont(new Font("HY°­B", Font.PLAIN, 14));
+		lblNewLabel_2.setBounds(53, 52, 57, 18);
 		add(lblNewLabel_2);
 
 		tfTitle = new JTextField();
@@ -46,13 +49,21 @@ public class PersnalSchedulePanel extends JPanel implements ActionListener {
 		add(tfPlace);
 		tfPlace.setColumns(10);
 
-		btnOK = new JButton("\uD655\uC778");
-		btnOK.setBounds(53, 169, 97, 23);
+		btnOK = new JButton();
+		btnOK.setIcon(ImageTransFormer.transformImage("ProjectImageIcon/ok.PNG", 100, 50));
+		btnOK.setBorderPainted(false);
+		btnOK.setFocusPainted(false);
+		btnOK.setContentAreaFilled(false);
+		btnOK.setBounds(53, 169, 121, 28);
 		btnOK.addActionListener(this);
 		add(btnOK);
 
-		btnDelete = new JButton("\uC0AD\uC81C");
-		btnDelete.setBounds(203, 169, 97, 23);
+		btnDelete = new JButton();
+		btnDelete.setIcon(ImageTransFormer.transformImage("ProjectImageIcon/delete.PNG", 100, 50));
+		btnDelete.setBorderPainted(false);
+		btnDelete.setFocusPainted(false);
+		btnDelete.setContentAreaFilled(false);
+		btnDelete.setBounds(186, 169, 113, 28);
 		btnDelete.addActionListener(this);
 		add(btnDelete);
 

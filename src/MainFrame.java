@@ -1,3 +1,7 @@
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
@@ -10,6 +14,7 @@ import java.util.ArrayList;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
 public class MainFrame extends JFrame implements Runnable {
@@ -28,20 +33,23 @@ public class MainFrame extends JFrame implements Runnable {
 	private ArrayList<ScheduleData> possibleDateList;
 	private ArrayList<ScheduleData> notFixedList;
 
+	private String userID;
+	private String userPW;
+	private String userName;
+	private String userEmail;
+
 	private LogInPanel logInPanel;
-	private MainPanel mainPane;
+	private MainCalendar mainCalendar;
 	private CreateNewGroupPanel createNewGroupPanel;
 	private GroupManagePanel groupManagePanel;
-	private MySchedulePanel mySchedulePanel;
+	private PossibleCalendar mySchedulePanel;
 	private RegisetPanel regisetPanel;
 
 	private Socket socket;
 	private ObjectOutputStream oos;
 	private ObjectInputStream ois;
-
-	public static void main(String[] args) {
-		MainFrame.getInstance();
-	}
+	private NorthPanel northPanel;
+	private JPanel centerPanel;
 
 	public static MainFrame getInstance() {
 		return mf;
@@ -50,20 +58,19 @@ public class MainFrame extends JFrame implements Runnable {
 	private MainFrame() { // GUI 생성
 		connect();
 		setTitle("Group Schedule");
+		Toolkit toolkit = Toolkit.getDefaultToolkit();
+		Image img = toolkit.getImage("ProjectImageIcon/IconImage.png");
+		setIconImage(img);
 		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		setPersnalCloseOperation();
-		setLayout(null);
 		setResizable(false);
-		initialize();
-		switchingPanel(LOGIN);
 		setVisible(true);
 	}
 
 	private void setPersnalCloseOperation() {
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
-				int i = JOptionPane.showConfirmDialog(null, "종료 하시겠습니까?", "", JOptionPane.YES_NO_OPTION);
-				if (i == 0) {
+				if (JOptionPane.showConfirmDialog(null, "종료 하시겠습니까?", "", JOptionPane.YES_NO_OPTION) == 0) {
 					try {
 						sendRequest(new MemberData(MemberData.DISCONNECT, null, null));
 						finalize();
@@ -100,7 +107,7 @@ public class MainFrame extends JFrame implements Runnable {
 		}
 	}
 
-	private void initialize() { // 프로그램 초기화
+	public void initialize() { // 프로그램 초기화
 		personalList = new ArrayList<>();
 		groupList = new ArrayList<>();
 		possibleDateList = new ArrayList<>();
@@ -108,54 +115,64 @@ public class MainFrame extends JFrame implements Runnable {
 		// 사용할 자료구조 정의
 
 		logInPanel = new LogInPanel();
-		mainPane = new MainPanel();
 		createNewGroupPanel = new CreateNewGroupPanel();
+		mainCalendar = new MainCalendar();
 		groupManagePanel = new GroupManagePanel();
-		mySchedulePanel = new MySchedulePanel();
+		mySchedulePanel = new PossibleCalendar();
 		regisetPanel = new RegisetPanel();
-		// 화면 구성
+		northPanel = new NorthPanel();
+		centerPanel = new JPanel();
+		// 각 화면 생성하기
 
-		add(logInPanel);
-		add(regisetPanel);
-		add(mainPane);
-		add(groupManagePanel);
-		add(createNewGroupPanel);
-		add(mySchedulePanel);
+		centerPanel.setBackground(Color.WHITE);
+		centerPanel.setLayout(new BorderLayout());
+
+		centerPanel.add(logInPanel, BorderLayout.CENTER);
+		centerPanel.add(regisetPanel, BorderLayout.CENTER);
+		centerPanel.add(mainCalendar, BorderLayout.CENTER);
+		centerPanel.add(groupManagePanel, BorderLayout.CENTER);
+		centerPanel.add(createNewGroupPanel, BorderLayout.CENTER);
+		centerPanel.add(mySchedulePanel, BorderLayout.CENTER);
+
+		getContentPane().add(centerPanel, BorderLayout.CENTER);
+		getContentPane().add(northPanel, BorderLayout.NORTH);
 		// 프레임에 화면 달기
+
+		switchingPanel(LOGIN);
 	}
 
 	public void switchingPanel(int state) { // 화면 전환 함수
 		logInPanel.setVisible(false);
 		regisetPanel.setVisible(false);
-		mainPane.setVisible(false);
+		mainCalendar.setVisible(false);
 		groupManagePanel.setVisible(false);
 		createNewGroupPanel.setVisible(false);
 		mySchedulePanel.setVisible(false);
+		northPanel.setVisible(true);
+		setSize(500, 590);
 		switch (state) {
 		case LOGIN:
+			northPanel.setVisible(false);
+			setSize(logInPanel.getWidth(), logInPanel.getHeight());
 			logInPanel.clearIDField();
 			logInPanel.clearPWField();
-			setSize(logInPanel.getWidth(), logInPanel.getHeight());
 			logInPanel.setVisible(true);
 			break;
 		case REGISTER:
-			setSize(regisetPanel.getWidth(), regisetPanel.getHeight() + 20);
+			northPanel.setVisible(false);
+			setSize(regisetPanel.getWidth(), regisetPanel.getHeight());
 			regisetPanel.setVisible(true);
 			break;
 		case MAIN:
-			setSize(mainPane.getWidth(), mainPane.getHeight());
-			mainPane.setVisible(true);
+			mainCalendar.setVisible(true);
 			break;
 		case GROUPMANAGE:
-			setSize(groupManagePanel.getWidth(), groupManagePanel.getHeight());
 			groupManagePanel.setVisible(true);
 			break;
 		case CREATEGROUP:
-			setSize(createNewGroupPanel.getWidth(), createNewGroupPanel.getHeight() + 40);
 			createNewGroupPanel.setVisible(true);
 			break;
 		case MYSCHEDULE:
-			setSize(mySchedulePanel.getWidth(), mySchedulePanel.getHeight());
 			mySchedulePanel.setVisible(true);
 			break;
 		}
@@ -170,6 +187,11 @@ public class MainFrame extends JFrame implements Runnable {
 					MemberData md = (MemberData) data;
 					switch (md.getState()) {
 					case MemberData.LOGIN_SUCCESS:
+						setTitle("Group Schedule  (" + md.getID() + ")");
+						userID = md.getID();
+						userPW = md.getPW();
+						userName = md.getName();
+						userEmail = md.getEmail();
 						getInitialData();
 						switchingPanel(MAIN);
 						break;
@@ -198,16 +220,16 @@ public class MainFrame extends JFrame implements Runnable {
 					switch (sd.getState()) {
 					case ScheduleData.GET_PERSONAL_SCHEDULE:
 						personalList = sd.getScheduleList();
-						mainPane.updateGUI();
+						mainCalendar.updateGUI();
 						break;
 					case ScheduleData.GET_GROUP_SCHEDULE:
 						groupList = sd.getScheduleList();
-						mySchedulePanel.updateGUI();
-						mainPane.updateGUI();
+						mySchedulePanel.updateCalendar();
+						mainCalendar.updateGUI();
 						break;
 					case ScheduleData.GET_POSSIBLE_DATE:
 						possibleDateList = sd.getScheduleList();
-						mySchedulePanel.updateGUI();
+						mySchedulePanel.updateCalendar();
 						break;
 					case ScheduleData.GROUP_MANAGE:
 						notFixedList = sd.getScheduleList();
@@ -215,7 +237,7 @@ public class MainFrame extends JFrame implements Runnable {
 						break;
 					case ScheduleData.CREATE_NEW_GROUP:
 						createNewGroupPanel.clearField();
-						switchingPanel(GROUPMANAGE);
+						JOptionPane.showMessageDialog(null, "그룹 만들기 성공!");
 						break;
 					case ScheduleData.CREATE_FAIL:
 						JOptionPane.showMessageDialog(null, "출석률이 75% 이하여서 그룹 등록 실패");
@@ -235,7 +257,7 @@ public class MainFrame extends JFrame implements Runnable {
 		try {
 			oos.writeObject(data);
 		} catch (IOException e) {
-			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, "서버가 열려있지 않습니다.");
 		}
 	}
 
@@ -247,18 +269,26 @@ public class MainFrame extends JFrame implements Runnable {
 	}
 
 	public ArrayList<ScheduleData> getPersonalList() {
+		if (personalList == null)
+			return personalList = new ArrayList<>();
 		return personalList;
 	}
 
 	public ArrayList<ScheduleData> getGroupList() {
+		if (groupList == null)
+			return groupList = new ArrayList<>();
 		return groupList;
 	}
 
 	public ArrayList<ScheduleData> getPossibleDateList() {
+		if (possibleDateList == null)
+			return possibleDateList = new ArrayList<>();
 		return possibleDateList;
 	}
 
 	public ArrayList<ScheduleData> getNotFixedList() {
+		if (notFixedList == null)
+			return notFixedList = new ArrayList<>();
 		return notFixedList;
 	}
 
@@ -275,4 +305,38 @@ public class MainFrame extends JFrame implements Runnable {
 				return sd;
 		return null;
 	}
+
+	public void slideUp() {
+		mainCalendar.slideUp();
+	}
+
+	public void slideDown() {
+		mainCalendar.slideDown();
+	}
+
+	public void logOut() {
+		switchingPanel(LOGIN);
+		slideDown();
+	}
+
+	public String getUserID() {
+		return userID;
+	}
+
+	public String getUserPW() {
+		return userPW;
+	}
+
+	public void setUserPW(String userPW) {
+		this.userPW = userPW;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public String getUserEmail() {
+		return userEmail;
+	}
+
 }

@@ -36,17 +36,18 @@ public class Server implements Runnable {
 
 	public void run() {
 		int userNo = 0; // login시 저장되는 userno
-		String userID;
+		String userID = "";
 		boolean isConnect = true;
 		Connection con = ConnectionManager.getConnectrion();
-		while (isConnect) {
+		thread_loop: while (isConnect) {
 			try {
 				Object data = (Object) ois.readObject();
 				if (data instanceof MemberData) { // MemberData
 					MemberData md = (MemberData) data;
 					switch (md.getState()) {
 					case MemberData.FIRST_CONNECT:
-						System.out.println("FIRST_CONNECT");
+						String name = null;
+						String email = null;
 						int loginState = 0;
 						String sql = "select * from member1 where ID = ?";
 						try {
@@ -58,6 +59,8 @@ public class Server implements Runnable {
 									loginState = MemberData.LOGIN_SUCCESS;
 									userNo = rs.getInt("MNO");
 									userID = rs.getString("ID");
+									name = rs.getString("MNAME");
+									email = rs.getString("EMAIL");
 								} else {
 									loginState = MemberData.PW_MISSMATCH;
 								}
@@ -69,10 +72,9 @@ public class Server implements Runnable {
 						} catch (SQLException e) {
 							e.printStackTrace();
 						}
-						sendResponse(new MemberData(loginState, md.getID(), md.getPW()));
+						sendResponse(new MemberData(loginState, name, userID, md.getPW(), email));
 						break;
 					case MemberData.REGISTER:
-						System.out.println("REGISTER");
 						String sqlR = "insert into member1 values(seq_mno.nextval,?,?,?,?)";
 						try {
 							PreparedStatement ps = con.prepareStatement(sqlR);
@@ -106,13 +108,36 @@ public class Server implements Runnable {
 							e.printStackTrace();
 						}
 						break;
+					case MemberData.UPDATE_MEMBER:
+						String updateMember = "update member1 set mname = ?, pw = ?, email = ? where id = ?";
+						try {
+							PreparedStatement ps = con.prepareStatement(updateMember);
+							ps.setString(1, md.getName());
+							ps.setString(2, md.getPW());
+							ps.setString(3, md.getEmail());
+							ps.setString(4, md.getID());
+							ps.executeUpdate();
+							ps.close();
+						} catch (SQLException e1) {
+							e1.printStackTrace();
+						}
+						break;
+					case MemberData.DELETE_ID:
+						String deleteMember = "delete member1 where id = ?";
+						try {
+							PreparedStatement ps = con.prepareStatement(deleteMember);
+							ps.setString(1, md.getID());
+							ps.executeUpdate();
+							ps.close();
+						} catch (SQLException e) {
+							e.printStackTrace();
+						}
+						break;
 					case MemberData.DISCONNECT:
-						System.out.println("DISCONNECT");
 						ConnectionManager.close(con);
 						ois.close();
 						oos.close();
 						isConnect = false;
-						System.out.println("client out");
 						break;
 					}// switch
 
@@ -122,24 +147,28 @@ public class Server implements Runnable {
 					case ScheduleData.CREATE_NEW_GROUP: // 1명 이하면 나가리. 2<= <전체:
 														// 최적의 날짜와 참여멤버. 75%
 														// 찬성해야 약속 성사.
-						System.out.println("뉴그룹등록");
 						ArrayList<Integer> memberL = new ArrayList<>();
-						int possibleDates[][] = new int[15][32]; // 각 개인이 가능한
+						int possibleDates[][][] = new int[2][13][32]; // 각 개인이
+																		// 가능한
 						memberL = sd.getMemberNoList();// 날짜의 집합
 						memberL.add(userNo);
-						for (int i : memberL) {
-							System.out.println(i);
-						}
-						System.out.println();
+						Calendar today = Calendar.getInstance();
+						int month = today.get(Calendar.MONTH) + 1;
+						int date = today.get(Calendar.DATE);
+						int year = today.get(Calendar.YEAR);
+						System.out.println(year);
 						for (int memberNO : memberL) {
 							try {
-								String sqlPossible = "select to_char(pdate, 'mm'), to_char(pdate,'dd') from possible1 where mno = ? and pdate > sysdate";
+								String sqlPossible = "select to_char(pdate, 'yyyy'),to_char(pdate, 'mm'), to_char(pdate,'dd') from possible1 where mno = ? and pdate > sysdate";
 								PreparedStatement ps = con.prepareStatement(sqlPossible);
 								ps.setInt(1, memberNO);
 								ResultSet rs = ps.executeQuery(); // 가능한 날짜의 모음
 								while (rs.next()) {
-									possibleDates[Integer.parseInt(rs.getString(1))][Integer
-											.parseInt(rs.getString(2))]++;
+									try {
+										possibleDates[Integer.parseInt(rs.getString(1)) - year][Integer
+												.parseInt(rs.getString(2))][Integer.parseInt(rs.getString(3))]++;
+									} catch (ArrayIndexOutOfBoundsException aiob) {
+									}
 								}
 								rs.close();
 								ps.close();
@@ -148,31 +177,48 @@ public class Server implements Runnable {
 							}
 						}
 
+						Date optimumD = null;
 						int optimum = 0; // possibleDates 중 가장 큰 수 저장
+						int optimumYear = 0; // 적합한 날의 연도
 						int optimumMonth = 0; // 적합한 날의 월
 						int optimumDate = 0; // 적합한 날의 일
-						Calendar today = Calendar.getInstance();
-						int month = today.get(Calendar.MONTH) + 1;
-						int date = today.get(Calendar.DATE);
-						for (int i = month; i < month + 2; i++) {
-							for (int j = date; j < 32; j++) {
-								if (possibleDates[i][j] > optimum) {
-									optimum = possibleDates[i][j];
-									optimumMonth = i;
-									optimumDate = j;
+
+						for (int q = 0; q < 1; q++) {
+							for (int i = month; i < month + 2; i++) {
+								for (int j = 0; j < 32; j++) {
+									if (i > 12) {
+										if (possibleDates[q + 1][i - 12][j] > optimum) {
+											optimum = possibleDates[q + 1][i - 12][j];
+											optimumYear = q + 1 + year;
+											optimumMonth = i - 12;
+											optimumDate = j;
+											Calendar cal = Calendar.getInstance();
+											cal.set(Calendar.YEAR, optimumYear);
+											cal.set(Calendar.MONTH, optimumMonth - 1);
+											cal.set(Calendar.DATE, optimumDate);
+											long d = cal.getTimeInMillis();
+											optimumD = new Date(d);
+										}
+									} else if (possibleDates[q][i][j] > optimum) {
+										optimum = possibleDates[q][i][j];
+										optimumYear = q + year;
+										optimumMonth = i;
+										optimumDate = j;
+										Calendar cal = Calendar.getInstance();
+										cal.set(Calendar.YEAR, optimumYear);
+										cal.set(Calendar.MONTH, optimumMonth - 1);
+										cal.set(Calendar.DATE, optimumDate);
+										long d = cal.getTimeInMillis();
+										optimumD = new Date(d);
+									}
 								}
 							}
 						}
 
 						if (memberL.size() == 0 || ((double) optimum / memberL.size()) < 0.75) {
 							sendResponse(new ScheduleData(ScheduleData.CREATE_FAIL, null, null));
+							break;
 						} else {
-							Calendar cal = Calendar.getInstance();
-							cal.set(Calendar.MONTH, optimumMonth - 1);
-							cal.set(Calendar.DATE, optimumDate);
-							long d = cal.getTimeInMillis();
-							java.sql.Date optimumD = new java.sql.Date(d);
-
 							String sqlG = "insert into group1 (grno,gname,gdate) values(seq_grno.nextval,?,?)";
 							try {
 								PreparedStatement ps = con.prepareStatement(sqlG);
@@ -198,8 +244,8 @@ public class Server implements Runnable {
 						}
 						break;
 					case ScheduleData.PERSNAL_SCHEDULE_ADD:
-						String sqlAdd = "insert into schedule1 values(?,?,?,?)";
 						try {
+							String sqlAdd = "insert into schedule1 values(?,?,?,?)";
 							PreparedStatement ps = con.prepareStatement(sqlAdd);
 							ps.setInt(1, userNo);
 							ps.setString(2, sd.getTitle());
@@ -207,6 +253,13 @@ public class Server implements Runnable {
 							ps.setDate(4, sd.getDate());
 							ps.executeUpdate();
 							ps.close();
+
+							String sqlDelete = "delete possible1 where pdate = ? and mno = ?";
+							PreparedStatement ps1 = con.prepareStatement(sqlDelete);
+							ps1.setDate(1, sd.getDate());
+							ps1.setInt(2, userNo);
+							ps1.executeUpdate();
+							ps1.close();
 						} catch (SQLException e) {
 							e.printStackTrace();
 						}
@@ -247,8 +300,6 @@ public class Server implements Runnable {
 							ps.setInt(1, userNo);
 							ResultSet rs = ps.executeQuery();
 							while (rs.next()) {
-								System.out.println(rs.getString(1) + "<-sdate" + rs.getString(2) + "<-title"
-										+ rs.getString(3) + "<-splace");
 								personalS.add(new ScheduleData(0, rs.getString("title"), rs.getString("splace"),
 										rs.getDate("sdate")));
 							}
@@ -261,17 +312,16 @@ public class Server implements Runnable {
 						break;
 					case ScheduleData.GET_GROUP_SCHEDULE:
 						ArrayList<ScheduleData> groupS = new ArrayList<>();
-						ArrayList<String> mnameList = new ArrayList<>();
 						String sqlGS = "select * from meeting where mno = ?";
 						try {
 							PreparedStatement ps = con.prepareStatement(sqlGS);
 							ps.setInt(1, userNo);
 							ResultSet rs = ps.executeQuery();
 							while (rs.next()) {
+								ArrayList<String> mnameList = new ArrayList<>();
 								double count = 0; // agree count
 								double total = 0;
 								int gNo = rs.getInt("grno");
-								System.out.println("groupNumber:" + gNo);
 								String sql1 = "select * from meeting, member1 where meeting.mno = member1.mno and meeting.grno = ?";
 								PreparedStatement ps1 = con.prepareStatement(sql1);
 								ps1.setInt(1, gNo);
@@ -285,17 +335,14 @@ public class Server implements Runnable {
 								}
 								rs1.close();
 								ps1.close();
-								System.out.println("count:" + count);
-								System.out.println("total:" + total);
 								if (count == total) {
 									String sql2 = "select * from group1 where grno = ?";
 									PreparedStatement ps2 = con.prepareStatement(sql2);
 									ps2.setInt(1, gNo);
 									ResultSet rs2 = ps2.executeQuery();
 									while (rs2.next()) {
-										System.out.println("date: " + rs2.getDate("gdate"));
 										groupS.add(new ScheduleData(0, rs2.getString("gname"), rs2.getString("gplace"),
-												mnameList, rs2.getDate("gdate")));
+												mnameList, rs2.getDate("gdate"), rs2.getInt("grno")));
 									}
 									rs2.close();
 									ps2.close();
@@ -307,123 +354,6 @@ public class Server implements Runnable {
 							ps.close();
 						} catch (SQLException e) {
 							e.printStackTrace();
-						}
-						break;
-					case ScheduleData.GROUP_MANAGE:
-						ArrayList<ScheduleData> notFixedL = new ArrayList<>();
-						ArrayList<String> memberList = new ArrayList<>();
-						String sqlGM = "select * from meeting where mno = ?";
-						try {
-							PreparedStatement ps = con.prepareStatement(sqlGM);
-							ps.setInt(1, userNo);
-							ResultSet rs = ps.executeQuery();
-							while (rs.next()) {
-								String sqlFindMN = "select mno from meeting where grno = ?";
-								PreparedStatement psFindMN = con.prepareStatement(sqlFindMN);
-								psFindMN.setInt(1, rs.getInt("grno"));
-								ResultSet rsFindMN = psFindMN.executeQuery();
-								while (rsFindMN.next()) {
-									String sqlF = "select mname from member1 where mno = ?";
-									PreparedStatement psF = con.prepareStatement(sqlF);
-									psF.setInt(1, rsFindMN.getInt("mno"));
-									ResultSet rsF = psF.executeQuery();
-									while (rsF.next()) {
-										memberList.add(rsF.getString("mname"));
-									}
-									rsF.close();
-									psF.close();
-								}
-								String sql1 = "select * from group1 where grno = ?";
-								PreparedStatement ps1 = con.prepareStatement(sql1);
-								ps1.setInt(1, rs.getInt("grno"));
-								ResultSet rs1 = ps1.executeQuery();
-								while (rs1.next()) {
-									notFixedL.add(new ScheduleData(0, rs1.getString("gname"), rs1.getString("gplace"),
-											memberList, rs1.getDate("gdate")));
-								}
-								sendResponse(new ScheduleData(ScheduleData.GROUP_MANAGE, notFixedL));
-								rs1.close();
-								ps1.close();
-								rsFindMN.close();
-								psFindMN.close();
-							}
-						} catch (SQLException e) {
-							e.printStackTrace();
-						}
-						break;
-					case ScheduleData.AGREE:
-						String subject = null;
-						String message = null;
-						String members = null;
-						String sql1 = "select * from meeting, member1, group1 where group1.grno = meeting.grno and meeting.mno = member1.mno and meeting.grno = ? ";
-						if (sd.isAgree()) {
-							String sql = "update meeting set agree = ? where mno = ? and grno = ?";
-							PreparedStatement ps;
-							try {
-								ps = con.prepareStatement(sql);
-								ps.setString(1, "YES");
-								ps.setInt(2, userNo);
-								ps.setInt(3, sd.getGrno());
-								ps.executeUpdate();
-								ps.close();
-
-								PreparedStatement ps1 = con.prepareStatement(sql1);
-								ps1.setInt(1, sd.getGrno());
-								ResultSet rs = ps1.executeQuery();
-								while (rs.next()) {
-									members += rs.getString("mname") + " ";
-									subject = String.format("[ㅇㅇㅇ] 그룹 %s에 대한 결과입니다.", rs.getString("gname"));
-									message = String.format("일시: %s%n장소: %s%n인원: %s%n일정 성사되었습니다.", rs.getDate("gdate"),
-											rs.getString("gplace"), members);
-									if (rs.getString("agree") == null) {
-										return;
-									}
-								}
-								rs.close();
-								ps1.close();
-
-								PreparedStatement ps2 = con.prepareStatement(sql1);
-								ResultSet rs2 = ps2.executeQuery();
-								while (rs2.next()) {
-									MailManager.sendMail(rs.getString("email"), subject, message);
-								}
-								rs2.close();
-								ps2.close();
-							} catch (SQLException e) {
-								e.printStackTrace();
-							}
-
-						} else {
-							try {
-								PreparedStatement ps1 = con.prepareStatement(sql1);
-								ps1.setInt(1, sd.getGrno());
-								ResultSet rs = ps1.executeQuery();
-								while (rs.next()) {
-									members += rs.getString("mname") + " ";
-									subject = String.format("[ㅇㅇㅇ] 그룹 %s에 대한 결과입니다.", rs.getString("gname"));
-									message = String.format("참석 불가능한 인원이 있어 일정이 취소되었습니다.%n일시: %s%n장소: %s%n인원: %s%n",
-											rs.getDate("gdate"), rs.getString("gplace"), members);
-								}
-								rs.close();
-								ps1.close();
-
-								String sqlDM = "delete group1 where grno = ?";
-								PreparedStatement psDM = con.prepareStatement(sqlDM);
-								psDM.setInt(1, sd.getGrno());
-								psDM.executeUpdate();
-								psDM.close();
-
-								PreparedStatement ps2 = con.prepareStatement(sql1);
-								ResultSet rs2 = ps2.executeQuery();
-								while (rs2.next()) {
-									MailManager.sendMail(rs.getString("email"), subject, message);
-								}
-								rs2.close();
-								ps2.close();
-
-							} catch (SQLException e) {
-								e.printStackTrace();
-							}
 						}
 						break;
 					case ScheduleData.GET_POSSIBLE_DATE:
@@ -441,6 +371,141 @@ public class Server implements Runnable {
 							ps.close();
 						} catch (SQLException e) {
 							e.printStackTrace();
+						}
+						break;
+					case ScheduleData.GROUP_MANAGE:
+						ArrayList<ScheduleData> notFixedL = new ArrayList<>();
+						String sqlGM = "select * from meeting where mno = ? and agree is null";
+						try {
+							PreparedStatement ps = con.prepareStatement(sqlGM);
+							ps.setInt(1, userNo);
+							ResultSet rs = ps.executeQuery();
+							while (rs.next()) {
+								ArrayList<String> memberList = new ArrayList<>();
+								String sqlFindMN = "select * from meeting, member1 where meeting.mno = member1.mno and meeting.grno = ?";
+								PreparedStatement psFindMN = con.prepareStatement(sqlFindMN);
+								psFindMN.setInt(1, rs.getInt("grno"));
+								ResultSet rsFindMN = psFindMN.executeQuery();
+								while (rsFindMN.next())
+									memberList.add(rsFindMN.getString("mname"));
+								String sql1 = "select * from group1 where grno = ?";
+								PreparedStatement ps1 = con.prepareStatement(sql1);
+								ps1.setInt(1, rs.getInt("grno"));
+								ResultSet rs1 = ps1.executeQuery();
+								while (rs1.next()) {
+									notFixedL.add(new ScheduleData(0, rs1.getString("gname"), rs1.getString("gplace"),
+											memberList, rs1.getDate("gdate"), rs1.getInt("grno")));
+								}
+								rs1.close();
+								ps1.close();
+								rsFindMN.close();
+								psFindMN.close();
+							}
+							rs.close();
+							ps.close();
+							sendResponse(new ScheduleData(ScheduleData.GROUP_MANAGE, notFixedL));
+						} catch (SQLException e) {
+							e.printStackTrace();
+						}
+						break;
+					case ScheduleData.AGREE:
+						if (sd.isAgree()) {
+							String sql = "update meeting set agree = ? where mno = ? and grno = ?";
+							PreparedStatement ps;
+							try {
+								ps = con.prepareStatement(sql);
+								ps.setString(1, "YES");
+								ps.setInt(2, userNo);
+								ps.setInt(3, sd.getGrno());
+								ps.executeUpdate();
+								ps.close();
+							} catch (SQLException e) {
+								e.printStackTrace();
+							}
+
+						} else {
+							try {
+								sendMailToGroup(sd.getGrno(), sd.isAgree());
+
+								String sqlDM = "delete group1 where grno = ?";
+								PreparedStatement psDM = con.prepareStatement(sqlDM);
+								psDM.setInt(1, sd.getGrno());
+								psDM.executeUpdate();
+								psDM.close();
+
+							} catch (SQLException e) {
+								e.printStackTrace();
+							}
+						}
+						break;
+					case ScheduleData.BET:
+						String sqlBet = "update meeting set mplace = ?, bet = ? where mno = ? and grno = ?";
+						try {
+							PreparedStatement psB = con.prepareStatement(sqlBet);
+							psB.setString(1, sd.getPlace());
+							psB.setInt(2, sd.getBet());
+							psB.setInt(3, userNo);
+							psB.setInt(4, sd.getGrno());
+							psB.executeUpdate();
+							psB.close();
+
+							// 지금 그룹에 대해 찬성했는지 확인
+							int bet = -1;
+							String place = "";
+							String check = "select * from meeting where grno = ?";
+							PreparedStatement ps = con.prepareStatement(check);
+							ps.setInt(1, sd.getGrno());
+							ResultSet rsCheck = ps.executeQuery();
+							while (rsCheck.next())
+								if (rsCheck.getString("agree") == null) {
+									rsCheck.close();
+									ps.close();
+									continue thread_loop;
+								} else {
+									if (rsCheck.getInt("bet") > bet) {
+										bet = rsCheck.getInt("bet");
+										place = rsCheck.getString("mplace");
+									}
+
+								}
+							rsCheck.close();
+							ps.close();
+
+							String sqlPlace = "update group1 set gplace = ? where grno = ?";
+							ps = con.prepareStatement(sqlPlace);
+							ps.setString(1, place);
+							ps.setInt(2, sd.getGrno());
+							ps.executeUpdate();
+							ps.close();
+
+							// 전원 찬성 이면 이하를 진행
+
+							Date d = sendMailToGroup(sd.getGrno(), sd.isAgree());
+
+							String groupDelete = "select * from meeting, member1, group1 where group1.grno = meeting.grno and meeting.mno = member1.mno "
+									+ "and meeting.grno != ? and member1.mno = ? and group1.gdate = ?";
+							PreparedStatement ps2 = con.prepareStatement(groupDelete);
+							ps2.setInt(1, sd.getGrno());
+							ps2.setInt(2, userNo);
+							ps2.setDate(3, d);
+							ResultSet rs = ps2.executeQuery();
+							while (rs.next()) {
+								sendMailToGroup(rs.getInt("grno"), false);
+								groupDelete = "delete group1 where grno = ?";
+								ps2 = con.prepareStatement(groupDelete);
+								ps2.setInt(1, rs.getInt("grno"));
+								ps2.executeUpdate();
+							}
+							rs.close();
+							ps2.close();
+
+							String possibleDelete = "delete possible1 where pdate = ?";
+							PreparedStatement ps3 = con.prepareStatement(possibleDelete);
+							ps3.setDate(1, d);
+							ps3.executeUpdate();
+							ps3.close();
+						} catch (SQLException e2) {
+							e2.printStackTrace();
 						}
 						break;
 					case ScheduleData.ADD_POSSIBLE_DATE:
@@ -476,6 +541,7 @@ public class Server implements Runnable {
 				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
+				break;
 			}
 		}
 	}
@@ -486,6 +552,45 @@ public class Server implements Runnable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private Date sendMailToGroup(int grno, boolean complete) {
+		String able = "";
+		String sql = "select * from meeting, member1, group1 where group1.grno = meeting.grno and meeting.mno = member1.mno and meeting.grno = ? ";
+		Date d = null;
+		String members = "", message = "", subject = "";
+		Connection con = ConnectionManager.getConnectrion();
+		if (complete)
+			able = "일정이 성사되었습니다.\n";
+		else
+			able = "참석 불가능한 인원이 있어 일정이 취소되었습니다.\n";
+
+		try {
+			PreparedStatement ps = con.prepareStatement(sql);
+			ps.setInt(1, grno);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				d = rs.getDate("gdate");
+				members += rs.getString("mname") + " ";
+				subject = String.format("[ㅇㅇㅇ] 그룹 %s에 대한 결과입니다.", rs.getString("gname"));
+				message = String.format("일시: %s%n장소: %s%n인원: %s", rs.getDate("gdate"), rs.getString("gplace"), members);
+			}
+			rs.close();
+			ps.close();
+
+			PreparedStatement ps2 = con.prepareStatement(sql);
+			ps2.setInt(1, grno);
+			ResultSet rs2 = ps2.executeQuery();
+			while (rs2.next()) {
+				MailManager.sendMail(rs2.getString("email"), subject, able + message);
+			}
+			rs2.close();
+			ps2.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		ConnectionManager.close(con);
+		return d;
 	}
 
 }

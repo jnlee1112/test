@@ -14,17 +14,11 @@ public class ScheduleData implements Serializable {
 	public static final int GET_GROUP_SCHEDULE = 9;
 	public static final int GET_POSSIBLE_DATE = 10;
 	public static final int AGREE = 11;
-
-	public String personalToString() {
-		return "날짜 :  " + date + "  |   제목 :  " + title + "  |   장소 :  " + place;
-	}
-
-	public String groupToString() {
-		return "date=" + date + "\n" + "title" + title + "\n" + "place=" + place;
-	}
+	public static final int BET = 12;
 
 	private int state;
 	private int grno;
+	private int bet;
 	private String grName;
 	private String place;
 	private ArrayList<Integer> memberNoList;
@@ -54,12 +48,20 @@ public class ScheduleData implements Serializable {
 		this.memberNoList = memberNoList;
 	}
 
-	public ScheduleData(int state, String grName, String place, ArrayList<String> memberNameL, Date date) {
+	public ScheduleData(int state, String grName, String place, ArrayList<String> memberNameL, Date date, int grNo) {
 		this.state = state;
 		this.grName = grName;
 		this.place = place;
 		this.date = date;
 		this.memberNameL = memberNameL;
+		this.grno = grNo;
+	}
+
+	public ScheduleData(int state, String place, int bet, int grno) {
+		this.state = state;
+		this.place = place;
+		this.bet = bet;
+		this.grno = grno;
 	}
 
 	public ScheduleData(int state, String title, String place) {
@@ -159,6 +161,14 @@ public class ScheduleData implements Serializable {
 
 	public ArrayList<ScheduleData> getScheduleList() {
 		return scheduleList;
+	}
+
+	public int getBet() {
+		return bet;
+	}
+
+	public void setBet(int bet) {
+		this.bet = bet;
 	}
 
 }
